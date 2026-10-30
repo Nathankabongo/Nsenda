@@ -1,0 +1,21 @@
+{
+  "name": "senda-contracts",
+  "version": "1.0.0",
+  "description": "Smart contracts Solidity pour la marketplace SENDA (SendaNFT, SendaEscrow, SendaTestToken)",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test test/SendaEscrow.test.ts",
+    "test:all": "hardhat test",
+    "node": "hardhat node",
+    "deploy:local": "hardhat run scripts/deploySenda.ts --network localhost",
+    "deploy:amoy": "hardhat run scripts/deploySenda.ts --network polygonAmoy",
+    "deploy:sepolia": "hardhat run scripts/deploySenda.ts --network sepolia"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "@openzeppelin/contracts": "^5.0.2",
+    "dotenv": "^16.4.5",
+    "hardhat": "^2.22.2",
+    "typescript": "^5.4.5"
+  }
+}

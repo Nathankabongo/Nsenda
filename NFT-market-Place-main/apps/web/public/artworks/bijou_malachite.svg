@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="100%" height="100%">
+  <defs>
+    <radialGradient id="bgGlow" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#2D231E"/>
+      <stop offset="60%" stop-color="#14100D"/>
+      <stop offset="100%" stop-color="#0A0807"/>
+    </radialGradient>
+    <linearGradient id="pedestalGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#3D2E24"/>
+      <stop offset="100%" stop-color="#1C140F"/>
+    </linearGradient>
+    <radialGradient id="malachiteCore" cx="45%" cy="40%" r="55%">
+      <stop offset="0%" stop-color="#2EC4B6"/>
+      <stop offset="25%" stop-color="#1B998B"/>
+      <stop offset="50%" stop-color="#0F5147"/>
+      <stop offset="75%" stop-color="#083830"/>
+      <stop offset="100%" stop-color="#031F1A"/>
+    </radialGradient>
+    <linearGradient id="copperWire" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F4A261"/>
+      <stop offset="35%" stop-color="#E76F51"/>
+      <stop offset="70%" stop-color="#B84A39"/>
+      <stop offset="100%" stop-color="#87291B"/>
+    </linearGradient>
+    <filter id="shadowFilter" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="18" stdDeviation="20" flood-color="#000000" flood-opacity="0.8"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="600" fill="url(#bgGlow)"/>
+
+  <!-- Museum Exhibition Pedestal -->
+  <ellipse cx="400" cy="510" rx="220" ry="35" fill="#000000" opacity="0.6" filter="blur(8px)"/>
+  <path d="M 220 480 L 580 480 L 550 540 L 250 540 Z" fill="url(#pedestalGrad)"/>
+  <ellipse cx="400" cy="480" rx="180" ry="24" fill="#4A3B33" stroke="#C86D3B" stroke-width="1.5" opacity="0.6"/>
+
+  <!-- Copper Necklace Cords -->
+  <path d="M 290 60 Q 400 120 510 60" fill="none" stroke="url(#copperWire)" stroke-width="6" stroke-linecap="round"/>
+  <path d="M 320 80 Q 400 140 480 80" fill="none" stroke="url(#copperWire)" stroke-width="4" stroke-linecap="round"/>
+
+  <!-- Central Malachite Gemstone -->
+  <g filter="url(#shadowFilter)">
+    <!-- Outer Shield Pectoral Base -->
+    <path d="M 400 140 C 490 140 520 230 490 340 C 460 430 400 460 400 460 C 400 460 340 430 310 340 C 280 230 310 140 400 140 Z" 
+          fill="url(#malachiteCore)" stroke="#021A15" stroke-width="4"/>
+
+    <!-- Concentric Malachite Banding Rings (Natural Agate / Malachite Patterns) -->
+    <path d="M 400 170 C 470 170 490 240 470 330 C 445 400 400 425 400 425 C 400 425 355 400 330 330 C 310 240 330 170 400 170 Z" 
+          fill="none" stroke="#2EC4B6" stroke-width="7" opacity="0.65"/>
+    <path d="M 400 200 C 450 200 465 255 450 320 C 430 375 400 395 400 395 C 400 395 370 375 350 320 C 335 255 350 200 400 200 Z" 
+          fill="none" stroke="#064E3B" stroke-width="9"/>
+    <path d="M 400 230 C 435 230 445 270 435 315 C 420 355 400 370 400 370 C 400 370 380 355 365 315 C 355 270 365 230 400 230 Z" 
+          fill="none" stroke="#6EE7B7" stroke-width="5" opacity="0.8"/>
+    <path d="M 400 260 C 420 260 425 285 420 310 C 410 335 400 345 400 345 C 400 345 390 335 380 310 C 375 285 380 260 400 260 Z" 
+          fill="none" stroke="#047857" stroke-width="6"/>
+
+    <!-- Polished Highlight Gleams -->
+    <ellipse cx="365" cy="240" rx="35" ry="55" transform="rotate(-25 365 240)" fill="#FFFFFF" opacity="0.2" filter="blur(6px)"/>
+    <ellipse cx="360" cy="230" rx="10" ry="25" transform="rotate(-25 360 230)" fill="#FFFFFF" opacity="0.45"/>
+  </g>
+
+  <!-- Handcrafted Red Copper Wire Bindings & Spirals -->
+  <g>
+    <!-- Top Bail & Mounting -->
+    <circle cx="400" cy="135" r="16" fill="none" stroke="url(#copperWire)" stroke-width="7"/>
+    <circle cx="400" cy="135" r="8" fill="url(#copperWire)"/>
+
+    <!-- Side Wrapping Filigrees -->
+    <path d="M 310 260 C 290 280 280 320 305 340 C 320 350 335 340 330 325 C 325 310 305 315 310 330" 
+          fill="none" stroke="url(#copperWire)" stroke-width="5" stroke-linecap="round"/>
+    <path d="M 490 260 C 510 280 520 320 495 340 C 480 350 465 340 470 325 C 475 310 495 315 490 330" 
+          fill="none" stroke="url(#copperWire)" stroke-width="5" stroke-linecap="round"/>
+
+    <!-- Bottom Terminal Spiral -->
+    <path d="M 400 460 C 400 480 385 495 370 490 C 355 485 360 465 375 465 C 390 465 395 480 385 495 C 380 505 370 510 360 505" 
+          fill="none" stroke="url(#copperWire)" stroke-width="4.5" stroke-linecap="round"/>
+  </g>
+
+  <!-- Label Badge -->
+  <g transform="translate(40, 520)">
+    <rect width="260" height="50" rx="12" fill="#1B4332" opacity="0.9" stroke="#E9C46A" stroke-width="1.5"/>
+    <text x="20" y="24" font-family="serif" font-size="14" font-weight="bold" fill="#E9C46A">MALACHITE DU KATANGA</text>
+    <text x="20" y="40" font-family="sans-serif" font-size="11" fill="#C1DBCF">Cuivre rouge martelé • Lubumbashi</text>
+  </g>
+</svg>

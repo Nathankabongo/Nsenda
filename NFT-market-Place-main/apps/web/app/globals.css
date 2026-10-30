@@ -1,0 +1,96 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-heading: 'Cinzel', serif;
+  --font-body: 'Plus Jakarta Sans', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* SENDA Color Tokens */
+  --senda-green: #1B4332;
+  --senda-green-light: #2D6A4F;
+  --senda-green-dark: #081C15;
+  --senda-ochre: #C86D3B;
+  --senda-ochre-light: #D97706;
+  --senda-beige: #F8F5F0;
+  --senda-cream: #FAF7F2;
+  --senda-ebony: #2D231E;
+  --senda-gold: #E9C46A;
+  --senda-border: #E8E1D5;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: #F8F5F0;
+  color: #2D231E;
+  min-height: 100vh;
+  overflow-x: hidden;
+  background-image: 
+    radial-gradient(circle at 10% 20%, rgba(200, 109, 59, 0.03) 0%, transparent 40%),
+    radial-gradient(circle at 90% 80%, rgba(27, 67, 50, 0.04) 0%, transparent 45%);
+}
+
+h1, h2, h3, h4, h5, h6, .font-serif {
+  font-family: var(--font-heading);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F1EDE4;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #D5C7B2;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #C86D3B;
+}
+
+/* SENDA Panel styling */
+.senda-card {
+  background: #FFFFFF;
+  border: 1px solid #EAE3D6;
+  box-shadow: 0 4px 20px -2px rgba(45, 35, 30, 0.05), 0 2px 6px -1px rgba(45, 35, 30, 0.03);
+  transition: all 0.25s ease-in-out;
+}
+
+.senda-card:hover {
+  border-color: #C86D3B;
+  box-shadow: 0 12px 30px -5px rgba(27, 67, 50, 0.12), 0 4px 10px -2px rgba(200, 109, 59, 0.08);
+  transform: translateY(-3px);
+}
+
+.senda-badge-verified {
+  background-color: #E8F0EC;
+  color: #1B4332;
+  border: 1px solid #C1DBCF;
+}
+
+.senda-badge-ochre {
+  background-color: #FBF0EA;
+  color: #9C4E23;
+  border: 1px solid #F3D2C0;
+}
+
+.senda-hero-pattern {
+  background-color: #1B4332;
+  background-image: 
+    radial-gradient(ellipse at top left, rgba(200, 109, 59, 0.25), transparent 50%),
+    radial-gradient(ellipse at bottom right, rgba(233, 196, 106, 0.15), transparent 60%);
+}
+
+.text-gradient-artisan {
+  background: linear-gradient(135deg, #1B4332 0%, #C86D3B 60%, #E9C46A 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}

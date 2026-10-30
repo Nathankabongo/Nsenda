@@ -1,0 +1,144 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  VISITOR
+  BUYER
+  ARTISAN
+  ADMIN
+}
+
+enum VerificationStatus {
+  UNVERIFIED
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum ArtworkStatus {
+  DRAFT
+  PUBLISHED
+  RESERVED
+  SOLD
+}
+
+enum OrderStatus {
+  INITIALIZED
+  FUNDED
+  SHIPPED
+  COMPLETED
+  CANCELLED
+}
+
+enum EscrowStatus {
+  CREATED
+  FUNDED
+  RELEASED
+  REFUNDED
+}
+
+model User {
+  id                  String             @id @default(uuid())
+  walletAddress       String             @unique @map("wallet_address")
+  displayName         String?            @map("display_name")
+  role                Role               @default(BUYER)
+  verificationStatus  VerificationStatus @default(UNVERIFIED) @map("verification_status")
+  bio                 String?
+  locationProvince    String?            @map("location_province")
+  createdAt           DateTime           @default(now()) @map("created_at")
+  updatedAt           DateTime           @updatedAt @map("updated_at")
+
+  artworks            Artwork[]
+  boughtOrders        Order[]            @relation("BuyerOrders")
+  soldOrders          Order[]            @relation("SellerOrders")
+
+  @@map("users")
+}
+
+model Category {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  slug        String    @unique
+  description String?
+  artworks    Artwork[]
+
+  @@map("categories")
+}
+
+model Artwork {
+  id               String        @id @default(uuid())
+  artisanId        String        @map("artisan_id")
+  categoryId       String        @map("category_id")
+  title            String
+  description      String?       @db.Text
+  price            Decimal       @db.Decimal(18, 4)
+  tokenSymbol      String        @default("STT") @map("token_symbol")
+  ipfsImageUri     String?       @map("ipfs_image_uri")
+  ipfsMetadataUri  String?       @map("ipfs_metadata_uri")
+  materials        String?
+  dimensions       String?
+  originRegion     String?       @map("origin_region")
+  status           ArtworkStatus @default(DRAFT)
+  createdAt        DateTime      @default(now()) @map("created_at")
+
+  artisan          User          @relation(fields: [artisanId], references: [id])
+  category         Category      @relation(fields: [categoryId], references: [id])
+  nftRecord        NftRecord?
+  orders           Order[]
+
+  @@map("artworks")
+}
+
+model NftRecord {
+  id              String   @id @default(uuid())
+  artworkId       String   @unique @map("artwork_id")
+  contractAddress String   @map("contract_address")
+  tokenId         Decimal  @db.Decimal(78, 0) @map("token_id")
+  network         String   @default("polygon-amoy")
+  mintTxHash      String?  @map("mint_tx_hash")
+  mintedAt        DateTime @default(now()) @map("minted_at")
+
+  artwork         Artwork  @relation(fields: [artworkId], references: [id])
+
+  @@map("nft_records")
+}
+
+model Order {
+  id              String       @id @default(uuid())
+  artworkId       String       @map("artwork_id")
+  buyerId         String       @map("buyer_id")
+  sellerId        String       @map("seller_id")
+  amount          Decimal      @db.Decimal(18, 4)
+  paymentToken    String       @default("STT") @map("payment_token")
+  status          OrderStatus  @default(INITIALIZED)
+  createdAt       DateTime     @default(now()) @map("created_at")
+  updatedAt       DateTime     @updatedAt @map("updated_at")
+
+  artwork         Artwork      @relation(fields: [artworkId], references: [id])
+  buyer           User         @relation("BuyerOrders", fields: [buyerId], references: [id])
+  seller          User         @relation("SellerOrders", fields: [sellerId], references: [id])
+  escrowRecord    EscrowRecord?
+
+  @@map("orders")
+}
+
+model EscrowRecord {
+  id              String       @id @default(uuid())
+  orderId         String       @unique @map("order_id")
+  contractAddress String       @map("contract_address")
+  escrowStatus    EscrowStatus @default(CREATED) @map("escrow_status")
+  depositTxHash   String?      @map("deposit_tx_hash")
+  releaseTxHash   String?      @map("release_tx_hash")
+  depositedAt     DateTime?    @map("deposited_at")
+  releasedAt      DateTime?    @map("released_at")
+
+  order           Order        @relation(fields: [orderId], references: [id])
+
+  @@map("escrow_records")
+}
