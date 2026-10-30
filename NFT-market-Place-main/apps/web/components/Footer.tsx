@@ -77,16 +77,28 @@ export function Footer() {
                 <span className="text-[#A7C4B5] block">Stockage Décentralisé :</span>
                 <span className="font-semibold text-white">IPFS via Pinata Gateway</span>
               </li>
+              <li className="pt-2">
+                <Link
+                  href="/terms"
+                  className="inline-flex items-center gap-1 text-[#E9C46A] hover:underline font-medium"
+                >
+                  <FileCode2 className="h-3 w-3" />
+                  Politique d&apos;Usage & Éthique IA
+                </Link>
+              </li>
             </ul>
           </div>
         </div>
 
         <div className="mt-12 border-t border-[#1B4332] pt-6 flex flex-col md:flex-row items-center justify-between text-xs text-[#7B9E8D] gap-4">
           <p>
-            © {new Date().getFullYear()} SENDA — L&apos;artisanat congolais, authentifié et valorisé.
+            © {new Date().getFullYear()} SENDA — L&apos;artisanat congolais, authentifié et valorisé. •{" "}
+            <Link href="/terms" className="text-[#A7C4B5] hover:text-[#E9C46A] underline">
+              Politique d&apos;Usage & Éthique
+            </Link>
           </p>
           <p className="text-[11px]">
-            Plateforme conforme aux spécifications du document directeur PLANSENDA.pdf
+            Plateforme conforme aux spécifications académiques (UNIKIN Master 1)
           </p>
         </div>
       </div>

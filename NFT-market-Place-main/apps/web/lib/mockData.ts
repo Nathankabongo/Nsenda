@@ -1,3 +1,14 @@
+export interface AICertificate {
+  score: number;
+  verdict: string;
+  detectedProvince: string;
+  culturalCanon: string;
+  materialsVerified: boolean;
+  anomalyRisk: "Très faible" | "Faible" | "Modéré";
+  hash: string;
+  model: string;
+}
+
 export interface NFTItem {
   id: string;
   tokenId: number;
@@ -25,6 +36,7 @@ export interface NFTItem {
   isListed: boolean;
   collectionName: string;
   traits: { trait_type: string; value: string | number }[];
+  aiCertificate?: AICertificate;
 }
 
 export const CONGO_PROVINCES = [
@@ -81,7 +93,18 @@ export const INITIAL_DEMO_NFTS: NFTItem[] = [
       { trait_type: "Matière", value: "Bois de wengé" },
       { trait_type: "Usage rituel", value: "Mukanda" },
       { trait_type: "Certification", value: "Audité sur site SENDA" },
+      { trait_type: "Score IA Authenticité", value: "97.4%" },
     ],
+    aiCertificate: {
+      score: 97.4,
+      verdict: "Authentique — Conforme aux canons artistiques du Kwilu",
+      detectedProvince: "Kwilu",
+      culturalCanon: "Canon initiatique Mukanda (Pende / Gungu)",
+      materialsVerified: true,
+      anomalyRisk: "Très faible",
+      hash: "0x8f2a6b31e9c20a4b7d51928374e6f1029384756102938475610293847561a01b",
+      model: "SendaVision-ConvNet v1.2",
+    },
   },
   {
     id: "2",
@@ -115,7 +138,18 @@ export const INITIAL_DEMO_NFTS: NFTItem[] = [
       { trait_type: "Matière", value: "Bois d'iroko & Laiton" },
       { trait_type: "Époque d'inspiration", value: "XVIIIe siècle" },
       { trait_type: "Certification", value: "Vérifié sur site" },
+      { trait_type: "Score IA Authenticité", value: "96.8%" },
     ],
+    aiCertificate: {
+      score: 96.8,
+      verdict: "Authentique — Statuaire dynastique Tshokwe certifiée",
+      detectedProvince: "Grand Kasaï",
+      culturalCanon: "Canon royal Chibinda Ilunga (Tshikapa)",
+      materialsVerified: true,
+      anomalyRisk: "Très faible",
+      hash: "0x4b7c19283e5a0f2b8c9d1029384756102938475610293847561029384756b02c",
+      model: "SendaVision-ConvNet v1.2",
+    },
   },
   {
     id: "3",
@@ -149,7 +183,18 @@ export const INITIAL_DEMO_NFTS: NFTItem[] = [
       { trait_type: "Matière", value: "Raphia & Teintures végétales" },
       { trait_type: "Durée de tissage", value: "6 semaines" },
       { trait_type: "Certification", value: "Coopérative auditée" },
+      { trait_type: "Score IA Authenticité", value: "98.1%" },
     ],
+    aiCertificate: {
+      score: 98.1,
+      verdict: "Authentique — Broderie raphia géométrique Shoowa certifiée",
+      detectedProvince: "Grand Kasaï",
+      culturalCanon: "Canon textile royal Bakuba / Shoowa",
+      materialsVerified: true,
+      anomalyRisk: "Très faible",
+      hash: "0x19283e5a0f2b8c9d10293847561029384756102938475610293847561a3d03e",
+      model: "SendaVision-ConvNet v1.2",
+    },
   },
   {
     id: "4",
@@ -182,7 +227,18 @@ export const INITIAL_DEMO_NFTS: NFTItem[] = [
       { trait_type: "Métal", value: "Cuivre rouge martelé" },
       { trait_type: "Province", value: "Haut-Katanga" },
       { trait_type: "Certification", value: "Audit minéralogique SENDA" },
+      { trait_type: "Score IA Authenticité", value: "95.9%" },
     ],
+    aiCertificate: {
+      score: 95.9,
+      verdict: "Authentique — Lapidaire malachite pure du Katanga certifié",
+      detectedProvince: "Haut-Katanga",
+      culturalCanon: "Orfèvrerie et taille de malachite de Lubumbashi",
+      materialsVerified: true,
+      anomalyRisk: "Très faible",
+      hash: "0x7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f04a",
+      model: "SendaVision-ConvNet v1.2",
+    },
   },
   {
     id: "5",

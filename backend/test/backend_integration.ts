@@ -161,6 +161,40 @@ async function runTests() {
       "KPIs globaux de la plateforme mis à jour en temps réel pour le jury"
     );
 
+    // 11. Module IA — Métriques et Fiche Technique (Exigence n°5 UNIKIN)
+    const aiMetricsRes = await axios.get(`${API_BASE}/ai/metrics`);
+    assert(
+      aiMetricsRes.data.success &&
+        aiMetricsRes.data.data.metrics.accuracy >= 90 &&
+        !!aiMetricsRes.data.data.blockchainLink.onChainStorage,
+      "GET /api/ai/metrics renvoie les métriques certifiées (Accuracy >= 90%) et le lien blockchain"
+    );
+
+    // 12. Module IA — Analyse en direct et génération d'attestation cryptographique
+    const aiVerifyRes = await axios.post(`${API_BASE}/ai/verify`, {
+      title: "Masque Royal Pende d'Initiation Mbuya",
+      category: "Masques traditionnels",
+      province: "Kwilu",
+      materials: "Bois de wengé, fibres de raphia, kaolin pur",
+      description: "Masque rituel authentique Mukanda du Kwilu.",
+    });
+    assert(
+      aiVerifyRes.data.success &&
+        aiVerifyRes.data.data.confidenceScore >= 90 &&
+        aiVerifyRes.data.data.authenticityVerdict === "AUTHENTIC_CONGOLESE_CRAFT" &&
+        aiVerifyRes.data.data.attestationHash.startsWith("0x"),
+      "POST /api/ai/verify produit une attestation d'authenticité cryptographique SHA-256 / Keccak256"
+    );
+
+    // 13. Module IA — Certificat d'authenticité lié à l'œuvre
+    const aiCertRes = await axios.get(`${API_BASE}/artworks/1/ai-certificate`);
+    assert(
+      aiCertRes.data.success &&
+        aiCertRes.data.data.confidenceScore >= 90 &&
+        !!aiCertRes.data.data.culturalCanon,
+      "GET /api/artworks/1/ai-certificate restitue le certificat IA vérifié pour le NFT #1"
+    );
+
     console.log("\n=================================================");
     console.log(`🎯 RÉSULTATS : ${passed} / ${total} TESTS RÉUSSIS (100% de succès)`);
     console.log("=================================================\n");

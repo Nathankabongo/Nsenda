@@ -3,6 +3,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { PinataService } from "../services/pinataService";
+import { AIAuthenticationService, AIAnalysisResult } from "../services/aiAuthenticationService";
 import {
   hashPassword,
   verifyPassword,
@@ -63,6 +64,7 @@ export interface Artwork {
   tokenId: number;
   royaltyBps?: number;
   verificationStatus: "VERIFIED" | "PENDING" | "UNVERIFIED";
+  aiAuthentication?: AIAnalysisResult;
 }
 
 export interface VerificationDossier {
@@ -318,6 +320,18 @@ const artworksStore: Artwork[] = [
     verificationStatus: "VERIFIED",
   },
 ];
+
+// Initialisation des attestations d'authenticité IA SendaVision pour chaque œuvre
+artworksStore.forEach((art) => {
+  art.aiAuthentication = AIAuthenticationService.analyzeCraft({
+    artworkId: art.id,
+    title: art.title,
+    category: art.category,
+    declaredProvince: art.province,
+    materials: art.materials,
+    description: art.description || art.title,
+  });
+});
 
 const ordersStore: EscrowOrder[] = [];
 const verificationRequests: VerificationDossier[] = [
@@ -719,6 +733,15 @@ router.post("/artworks", authenticateToken, requireVerifiedArtisan, (req: Reques
     ipfsImageUri: "ipfs://bafybeicimage" + Date.now() + "/piece.jpg",
   };
 
+  newArtwork.aiAuthentication = AIAuthenticationService.analyzeCraft({
+    artworkId: newArtwork.id,
+    title: newArtwork.title,
+    category: newArtwork.category,
+    declaredProvince: newArtwork.province,
+    materials: newArtwork.materials,
+    description: newArtwork.description,
+  });
+
   artworksStore.push(newArtwork);
 
   res.status(201).json({
@@ -1056,6 +1079,82 @@ router.get("/users/:wallet/orders", (req: Request, res: Response) => {
   res.status(200).json({
     success: true,
     data: userOrders,
+  });
+});
+
+// ============================================================================
+// MODULE D'INTELLIGENCE ARTIFICIELLE D'AUTHENTIFICATION (Exigence n°5 UNIKIN)
+// ============================================================================
+
+/**
+ * POST /api/ai/verify
+ * Analyse en direct d'une œuvre artisanale par le modèle de vision & conformité culturelle
+ */
+router.post("/ai/verify", upload.single("image"), (req: Request, res: Response) => {
+  const { title, category, province, materials, description } = req.body;
+
+  if (!title || !materials) {
+    return res.status(400).json({
+      success: false,
+      error: { code: "AI_PARAMS_REQUIRED", message: "Le titre et les matières sont requis pour l'analyse IA." },
+    });
+  }
+
+  const analysis = AIAuthenticationService.analyzeCraft({
+    title,
+    category: category || "Artisanat traditionnel",
+    declaredProvince: province || "Kinshasa",
+    materials,
+    description: description || "",
+    imageFileName: req.file?.filename,
+  });
+
+  res.status(200).json({
+    success: true,
+    data: analysis,
+  });
+});
+
+/**
+ * GET /api/ai/metrics
+ * Fiche technique des métriques et lien précis avec la blockchain pour le jury UNIKIN
+ */
+router.get("/ai/metrics", (req: Request, res: Response) => {
+  const metrics = AIAuthenticationService.getModelMetrics();
+  res.status(200).json({
+    success: true,
+    data: metrics,
+  });
+});
+
+/**
+ * GET /api/artworks/:id/ai-certificate
+ * Consultation du certificat d'authenticité IA d'une œuvre
+ */
+router.get("/artworks/:id/ai-certificate", (req: Request, res: Response) => {
+  const artwork = artworksStore.find((a) => a.id === req.params.id || a.tokenId.toString() === req.params.id);
+
+  if (!artwork) {
+    return res.status(404).json({
+      success: false,
+      error: { code: "ARTWORK_NOT_FOUND", message: "Œuvre introuvable" },
+    });
+  }
+
+  if (!artwork.aiAuthentication) {
+    artwork.aiAuthentication = AIAuthenticationService.analyzeCraft({
+      artworkId: artwork.id,
+      title: artwork.title,
+      category: artwork.category,
+      declaredProvince: artwork.province,
+      materials: artwork.materials,
+      description: artwork.description,
+    });
+  }
+
+  res.status(200).json({
+    success: true,
+    data: artwork.aiAuthentication,
   });
 });
 

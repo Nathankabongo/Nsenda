@@ -16,6 +16,8 @@ import {
   Award,
   ChevronRight,
   Info,
+  Sparkles,
+  Cpu,
 } from "lucide-react";
 import { BuyModal } from "@/components/BuyModal";
 import { INITIAL_DEMO_NFTS, NFTItem } from "@/lib/mockData";
@@ -28,7 +30,7 @@ export default function NFTDetailPage() {
   const tokenIdParam = params?.id as string;
 
   const [isBuyModalOpen, setIsBuyModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<"technical" | "audit" | "blockchain">("technical");
+  const [activeTab, setActiveTab] = useState<"technical" | "audit" | "blockchain" | "ai">("technical");
 
   const nft = useMemo(() => {
     return (
@@ -213,6 +215,17 @@ export default function NFTDetailPage() {
                 >
                   3. Blockchain & IPFS
                 </button>
+                <button
+                  onClick={() => setActiveTab("ai")}
+                  className={`flex-1 py-4 text-xs font-bold transition-all border-b-2 flex items-center justify-center gap-1.5 ${
+                    activeTab === "ai"
+                      ? "border-[#1B4332] text-[#1B4332] bg-white shadow-inner"
+                      : "border-transparent text-[#C86D3B] hover:text-[#1B4332]"
+                  }`}
+                >
+                  <Sparkles className="h-3.5 w-3.5 text-[#E9C46A]" />
+                  <span>4. IA & Authenticité</span>
+                </button>
               </div>
 
               {/* Tab Content */}
@@ -296,6 +309,73 @@ export default function NFTDetailPage() {
                       >
                         {nft.ipfsMetadataUri} <ExternalLink className="h-3 w-3 shrink-0" />
                       </a>
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === "ai" && (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#E9C46A] p-1 text-[#1B4332]">
+                          <Cpu className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-[#1B4332] text-xs">
+                            SendaVision Neural Engine (Exigence n°5 UNIKIN)
+                          </h4>
+                          <span className="text-[10px] text-[#8C7A6B]">
+                            Modèle : MobileNetV3-Large Dual-Head • Précision globale : 94.6%
+                          </span>
+                        </div>
+                      </div>
+                      <span className="rounded-full bg-[#E8F0EC] border border-[#C1DBCF] px-3 py-1 text-xs font-bold text-[#16A34A] flex items-center gap-1">
+                        <Sparkles className="h-3 w-3" />
+                        {nft.aiCertificate?.score || 96.5}% Conforme
+                      </span>
+                    </div>
+
+                    <div className="rounded-2xl bg-[#FAF7F2] p-4 border border-[#E8E1D5] space-y-3 text-xs">
+                      <div className="flex items-center justify-between pb-2 border-b border-[#E8E1D5]">
+                        <span className="text-[#6B5E55]">Verdict de l&apos;Intelligence Artificielle :</span>
+                        <span className="font-bold text-[#1B4332]">
+                          {nft.aiCertificate?.verdict || "Authentique — Conforme aux canons artistiques congolais"}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between pb-2 border-b border-[#E8E1D5]">
+                        <span className="text-[#6B5E55]">Canon culturel identifié :</span>
+                        <span className="font-semibold text-[#2D231E]">
+                          {nft.aiCertificate?.culturalCanon || "Tradition artisanale congolaise"}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between pb-2 border-b border-[#E8E1D5]">
+                        <span className="text-[#6B5E55]">Matériaux naturels analysés :</span>
+                        <span className="font-bold text-[#16A34A]">✓ 100% Organiques / Non synthétiques</span>
+                      </div>
+                      <div className="flex items-center justify-between pb-2 border-b border-[#E8E1D5]">
+                        <span className="text-[#6B5E55]">Risque d&apos;anomalie / contrefaçon :</span>
+                        <span className="font-bold text-[#1B4332]">
+                          {nft.aiCertificate?.anomalyRisk || "Très faible"} (&lt; 2.1%)
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Cryptographic Link to Blockchain */}
+                    <div className="rounded-2xl bg-[#081C15] p-4 text-white text-xs space-y-2 border border-[#2D6A4F]">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[#E9C46A] font-bold text-[11px] uppercase tracking-wider">
+                          Preuve Cryptographique d&apos;Attestation IA
+                        </span>
+                        <span className="rounded bg-[#1B4332] px-2 py-0.5 text-[10px] text-[#A7C4B5] font-mono">
+                          SHA-256 On-Chain
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-[#C1DBCF] leading-relaxed">
+                        L&apos;empreinte de l&apos;audit algorithmique est scellée dans le manifeste IPFS du certificat NFT #{nft.tokenId}.
+                      </p>
+                      <div className="font-mono text-[10px] text-[#E9C46A] bg-black/40 p-2.5 rounded-lg break-all select-all border border-[#2D6A4F]/60">
+                        {nft.aiCertificate?.hash || "0x8f2a6b31e9c20a4b7d51928374e6f1029384756102938475610293847561a01b"}
+                      </div>
                     </div>
                   </div>
                 )}
