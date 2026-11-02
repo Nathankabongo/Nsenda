@@ -2,7 +2,8 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAccount, useWriteContract } from "wagmi";
+import { useAccount, useWriteContract, usePublicClient } from "wagmi";
+import { parseEventLogs } from "viem";
 import confetti from "canvas-confetti";
 import { toast } from "sonner";
 import {
@@ -16,7 +17,7 @@ import {
   Sparkles,
   Cpu,
 } from "lucide-react";
-import { AETHER_NFT_ABI, DEFAULT_CONTRACTS } from "@/lib/contracts/abis";
+import { SENDA_NFT_ABI, DEFAULT_CONTRACTS } from "@/lib/contracts/abis";
 import { formatAddress } from "@/lib/utils";
 import { SENDA_CATEGORIES, CONGO_PROVINCES } from "@/lib/mockData";
 import { useAuth } from "@/context/AuthContext";
@@ -28,6 +29,7 @@ export default function CreateNFTPage() {
   const { user, isLoading } = useAuth();
   const { address, isConnected } = useAccount();
   const { writeContractAsync } = useWriteContract();
+  const publicClient = usePublicClient();
 
   // Form states
   const [title, setTitle] = useState("Masque d'Apparat Pende");
@@ -41,10 +43,12 @@ export default function CreateNFTPage() {
   const [tradition, setTradition] = useState("Pende");
   const [royaltyPercentage, setRoyaltyPercentage] = useState(5);
   const [imageUrl, setImageUrl] = useState("/artworks/masque_pende.jpg");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const [publishStep, setPublishStep] = useState<"idle" | "uploading_ipfs" | "minting_nft" | "success">("idle");
   const [createdTokenId, setCreatedTokenId] = useState<number | null>(null);
   const [createdTxHash, setCreatedTxHash] = useState<string>("");
+  const [isIpfsDemoMode, setIsIpfsDemoMode] = useState<boolean>(false);
 
   const [aiScan, setAiScan] = useState<{
     score: number;
@@ -83,6 +87,7 @@ export default function CreateNFTPage() {
         toast.error("Le fichier dépasse la limite de 10 Mo");
         return;
       }
+      setSelectedFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setImageUrl(reader.result as string);
@@ -106,42 +111,81 @@ export default function CreateNFTPage() {
 
     try {
       setPublishStep("uploading_ipfs");
-      toast.loading("1/2 Téléversement décentralisé des métadonnées vers IPFS (Pinata)...", { id: "pub-tx" });
-      await new Promise((res) => setTimeout(res, 1800));
+      toast.loading("1/2 Téléversement décentralisé des métadonnées vers IPFS...", { id: "pub-tx" });
 
-      const fakeCid = "bafybeihsenda" + Math.random().toString(36).substring(2, 10);
-      const metadataURI = `ipfs://${fakeCid}/metadata.json`;
+      let metadataURI = "";
+      const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
+
+      try {
+        const formData = new FormData();
+        if (selectedFile) {
+          formData.append("image", selectedFile);
+        }
+        const res = await fetch(`${API_BASE_URL}/artworks/temp/metadata`, {
+          method: "POST",
+          body: formData,
+        });
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && json.data?.metadataUri) {
+            metadataURI = json.data.metadataUri;
+          }
+        }
+      } catch {
+        // Backend injoignable
+      }
+
+      if (!metadataURI) {
+        setIsIpfsDemoMode(true);
+        metadataURI = "ipfs://demo-preview-cid/metadata.json";
+      } else {
+        setIsIpfsDemoMode(false);
+      }
 
       setPublishStep("minting_nft");
       toast.loading("2/2 Signature et frappe du NFT ERC-721 sur Polygon Amoy...", { id: "pub-tx" });
 
       const royaltyBps = Math.round(royaltyPercentage * 100);
 
-      try {
-        const tx = await writeContractAsync({
-          address: DEFAULT_CONTRACTS.nftAddress,
-          abi: AETHER_NFT_ABI,
-          functionName: "mintNFT",
-          args: [address, metadataURI, BigInt(royaltyBps)],
+      const tx = await writeContractAsync({
+        address: DEFAULT_CONTRACTS.nftAddress,
+        abi: SENDA_NFT_ABI,
+        functionName: "mintArtwork",
+        args: [address, metadataURI, BigInt(royaltyBps)],
+      });
+      setCreatedTxHash(tx);
+
+      toast.loading("Confirmation du bloc sur Polygon Amoy...", { id: "pub-tx" });
+
+      let mintedTokenId: number | null = null;
+      if (publicClient) {
+        const receipt = await publicClient.waitForTransactionReceipt({ hash: tx });
+        const logs = parseEventLogs({
+          abi: SENDA_NFT_ABI,
+          eventName: "ArtworkMinted",
+          logs: receipt.logs,
         });
-        setCreatedTxHash(tx);
-      } catch {
-        const simTx = "0x" + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
-        setCreatedTxHash(simTx);
+        if (logs && logs.length > 0 && logs[0].args?.tokenId !== undefined) {
+          mintedTokenId = Number(logs[0].args.tokenId);
+        }
       }
 
-      setCreatedTokenId(Math.floor(Math.random() * 800) + 100);
+      setCreatedTokenId(mintedTokenId ?? 1);
       setPublishStep("success");
 
-      toast.success("Certificat NFT émis avec succès !", { id: "pub-tx" });
+      toast.success("Certificat NFT émis avec succès sur la blockchain !", { id: "pub-tx" });
 
       confetti({
         particleCount: 100,
         spread: 70,
         origin: { y: 0.6 },
       });
-    } catch {
-      toast.error("Erreur lors de la publication", { id: "pub-tx" });
+    } catch (err: any) {
+      const errorMsg =
+        err?.shortMessage ||
+        err?.message ||
+        "La transaction a été refusée ou a échoué.";
+      toast.error(errorMsg, { id: "pub-tx" });
       setPublishStep("idle");
     }
   };
@@ -230,6 +274,12 @@ export default function CreateNFTPage() {
                 <span className="font-bold text-[#1B4332]">{price} STT</span>
               </div>
             </div>
+
+            {isIpfsDemoMode && (
+              <div className="rounded-xl bg-amber-50 border border-amber-200 p-2.5 text-[11px] text-amber-800 text-center font-medium">
+                ⚠️ Mode démo : Service IPFS distant non connecté. Métadonnées de démonstration ancrées on-chain.
+              </div>
+            )}
 
             <div className="flex gap-3 pt-2">
               <button

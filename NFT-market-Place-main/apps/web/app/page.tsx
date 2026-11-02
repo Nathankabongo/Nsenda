@@ -25,6 +25,7 @@ import {
   Building2,
   ExternalLink,
   Wallet,
+  Compass,
 } from "lucide-react";
 import { NFTCard } from "@/components/NFTCard";
 import { BuyModal } from "@/components/BuyModal";

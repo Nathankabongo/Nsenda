@@ -37,7 +37,7 @@ interface DemoOrder {
   createdAt: string;
 }
 
-export default function MyNFTsPage() {
+function MyNFTsContent() {
   const { user } = useAuth();
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab");
@@ -403,5 +403,13 @@ export default function MyNFTsPage() {
       </div>
     </div>
     </RoleGuard>
+  );
+}
+
+export default function MyNFTsPage() {
+  return (
+    <React.Suspense fallback={<div className="min-h-screen bg-[#F8F5F0] flex items-center justify-center text-sm font-bold text-[#1B4332]">Chargement de votre espace...</div>}>
+      <MyNFTsContent />
+    </React.Suspense>
   );
 }
