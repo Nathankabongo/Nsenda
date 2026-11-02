@@ -18,6 +18,7 @@ import {
 import { NFTItem } from "@/lib/mockData";
 import { formatAddress } from "@/lib/utils";
 import { createOrder, syncOrderTransaction } from "@/lib/api";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
 
 interface BuyModalProps {
   nft: NFTItem | null;
@@ -215,29 +216,40 @@ export function BuyModal({ nft, isOpen, onClose, onSuccess }: BuyModalProps) {
               </div>
             </div>
 
-            {/* Action button */}
-            <button
-              onClick={handleEscrowDeposit}
-              disabled={step === "approving" || step === "depositing"}
-              className="w-full rounded-xl bg-[#1B4332] hover:bg-[#143728] py-3.5 text-sm font-bold text-white transition-all shadow-md flex items-center justify-center gap-2 disabled:opacity-50"
-            >
-              {step === "approving" ? (
-                <>
-                  <Clock className="h-4 w-4 animate-spin text-[#E9C46A]" />
-                  <span>1/2 Approbation des jetons STT...</span>
-                </>
-              ) : step === "depositing" ? (
-                <>
-                  <Clock className="h-4 w-4 animate-spin text-[#E9C46A]" />
-                  <span>2/2 Verrouillage sous séquestre...</span>
-                </>
-              ) : (
-                <>
-                  <Lock className="h-4 w-4 text-[#E9C46A]" />
-                  <span>Confirmer le dépôt sous séquestre ({nft.price} STT)</span>
-                </>
-              )}
-            </button>
+            {/* Action button ou Inviter à connecter le portefeuille */}
+            {!isConnected ? (
+              <div className="rounded-2xl border border-amber-300 bg-amber-50 p-4 text-center space-y-3">
+                <p className="text-xs text-amber-900 font-semibold">
+                  ⚠️ Action blockchain requise : Veuillez connecter votre portefeuille MetaMask pour consigner vos jetons sous séquestre.
+                </p>
+                <div className="flex justify-center">
+                  <ConnectButton showBalance={false} chainStatus="none" accountStatus="avatar" />
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={handleEscrowDeposit}
+                disabled={step === "approving" || step === "depositing"}
+                className="w-full rounded-xl bg-[#1B4332] hover:bg-[#143728] py-3.5 text-sm font-bold text-white transition-all shadow-md flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {step === "approving" ? (
+                  <>
+                    <Clock className="h-4 w-4 animate-spin text-[#E9C46A]" />
+                    <span>1/2 Approbation des jetons STT...</span>
+                  </>
+                ) : step === "depositing" ? (
+                  <>
+                    <Clock className="h-4 w-4 animate-spin text-[#E9C46A]" />
+                    <span>2/2 Verrouillage sous séquestre...</span>
+                  </>
+                ) : (
+                  <>
+                    <Lock className="h-4 w-4 text-[#E9C46A]" />
+                    <span>Confirmer le dépôt sous séquestre ({nft.price} STT)</span>
+                  </>
+                )}
+              </button>
+            )}
 
             <p className="text-center text-[11px] text-[#6B5E55]">
               Réseau de démonstration : <strong>Polygon Amoy</strong> • Aucun fonds réel n&apos;est engagé

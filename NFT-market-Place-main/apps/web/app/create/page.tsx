@@ -19,9 +19,13 @@ import {
 import { AETHER_NFT_ABI, DEFAULT_CONTRACTS } from "@/lib/contracts/abis";
 import { formatAddress } from "@/lib/utils";
 import { SENDA_CATEGORIES, CONGO_PROVINCES } from "@/lib/mockData";
+import { useAuth } from "@/context/AuthContext";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { RoleGuard } from "@/components/RoleGuard";
 
 export default function CreateNFTPage() {
   const router = useRouter();
+  const { user, isLoading } = useAuth();
   const { address, isConnected } = useAccount();
   const { writeContractAsync } = useWriteContract();
 
@@ -143,21 +147,55 @@ export default function CreateNFTPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F5F0] py-12 px-4 sm:px-6 lg:px-8 text-[#2D231E]">
-      <div className="mx-auto max-w-6xl">
-        {/* Header */}
-        <div className="text-center max-w-2xl mx-auto mb-10 space-y-2">
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-[#E8F0EC] border border-[#C1DBCF] px-4 py-1.5 text-xs font-bold text-[#1B4332]">
-            <ShieldCheck className="h-4 w-4 text-[#16A34A]" />
-            <span>Studio de Création & Enregistrement Officiel • SENDA</span>
+    <RoleGuard allowedRoles={["ARTISAN"]} showDeniedScreen redirectOnDeny>
+      <div className="min-h-screen bg-[#F8F5F0] py-12 px-4 sm:px-6 lg:px-8 text-[#2D231E]">
+        <div className="mx-auto max-w-6xl">
+          {/* Header */}
+          <div className="text-center max-w-2xl mx-auto mb-8 space-y-2">
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-[#E8F0EC] border border-[#C1DBCF] px-4 py-1.5 text-xs font-bold text-[#1B4332]">
+              <ShieldCheck className="h-4 w-4 text-[#16A34A]" />
+              <span>Studio de Création & Enregistrement Officiel • SENDA</span>
+            </div>
+            <h1 className="font-serif text-3xl sm:text-4xl font-extrabold text-[#1B4332]">
+              Enregistrer une Création Artisanale
+            </h1>
+            <p className="text-xs text-[#6B5E55]">
+              Atelier : <strong>{user?.workshopName || user?.displayName}</strong> ({user?.province || "Congo"})
+            </p>
           </div>
-          <h1 className="font-serif text-3xl sm:text-4xl font-extrabold text-[#1B4332]">
-            Enregistrer une Création Artisanale
-          </h1>
-          <p className="text-xs text-[#6B5E55]">
-            Associez votre œuvre physique à un double numérique sécurisé sur Polygon Amoy et conservé sur IPFS.
-          </p>
-        </div>
+
+          {/* Portefeuille Artisan Banner */}
+          {!isConnected ? (
+            <div className="mb-8 rounded-3xl border border-amber-200 bg-amber-50/80 p-5 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xs">
+              <div className="flex items-center gap-3.5">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-amber-700">
+                  <Lock className="h-5 w-5" />
+                </div>
+                <div className="space-y-0.5">
+                  <p className="text-sm font-bold text-[#1B4332]">Connexion du Portefeuille Artisan Requise</p>
+                  <p className="text-xs text-[#6B5E55]">
+                    Connectez votre portefeuille MetaMask pour signer l&apos;émission du NFT et percevoir les fonds.
+                  </p>
+                </div>
+              </div>
+              <ConnectButton showBalance={false} chainStatus="none" accountStatus="avatar" />
+            </div>
+          ) : (
+            <div className="mb-8 rounded-2xl border border-emerald-200 bg-emerald-50/80 p-3.5 px-6 flex items-center justify-between shadow-xs">
+              <div className="flex items-center gap-3">
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
+                  <CheckCircle2 className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-[#1B4332]">Portefeuille Artisan Connecté</p>
+                  <p className="font-mono text-[11px] text-[#6B5E55]">{address}</p>
+                </div>
+              </div>
+              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                Prêt pour émission NFT
+              </span>
+            </div>
+          )}
 
         {publishStep === "success" ? (
           <div className="rounded-3xl border border-[#C1DBCF] bg-white p-8 sm:p-12 text-center shadow-md space-y-6 max-w-xl mx-auto">
@@ -479,5 +517,6 @@ export default function CreateNFTPage() {
         )}
       </div>
     </div>
+    </RoleGuard>
   );
 }

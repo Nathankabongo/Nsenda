@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useAccount } from "wagmi";
 import confetti from "canvas-confetti";
 import { toast } from "sonner";
@@ -16,11 +17,14 @@ import {
   ExternalLink,
   Package,
   MapPin,
+  ShoppingBag,
 } from "lucide-react";
 import { formatAddress } from "@/lib/utils";
 import { INITIAL_DEMO_NFTS, NFTItem } from "@/lib/mockData";
 import { DEFAULT_CONTRACTS } from "@/lib/contracts/abis";
 import { syncOrderTransaction } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
+import { RoleGuard } from "@/components/RoleGuard";
 
 interface DemoOrder {
   id: string;
@@ -34,11 +38,23 @@ interface DemoOrder {
 }
 
 export default function MyNFTsPage() {
+  const { user } = useAuth();
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get("tab");
   const { address, isConnected } = useAccount();
+
   const [activeTab, setActiveTab] = useState<"orders" | "artisan">("orders");
   const [sttBalance, setSttBalance] = useState<number>(350);
   const [isFauceting, setIsFauceting] = useState(false);
   const [isReleasing, setIsReleasing] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (tabParam === "artisan" && user?.role === "ARTISAN") {
+      setActiveTab("artisan");
+    } else {
+      setActiveTab("orders");
+    }
+  }, [tabParam, user]);
 
   // Demo orders under physical escrow
   const [orders, setOrders] = useState<DemoOrder[]>([
@@ -113,78 +129,87 @@ export default function MyNFTsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F5F0] py-12 px-4 sm:px-6 lg:px-8 text-[#2D231E]">
-      <div className="mx-auto max-w-6xl space-y-8">
-        {/* User Profile Header Card */}
-        <div className="rounded-3xl border border-[#E8E1D5] bg-white p-7 sm:p-9 shadow-sm">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-            <div className="flex items-center gap-4">
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#1B4332] text-[#E9C46A] shadow-sm font-serif text-2xl font-bold">
-                {address ? address.slice(2, 4).toUpperCase() : "CD"}
+    <RoleGuard allowedRoles={["ARTISAN", "BUYER", "ADMIN"]} showDeniedScreen redirectOnDeny>
+      <div className="min-h-screen bg-[#F8F5F0] py-12 px-4 sm:px-6 lg:px-8 text-[#2D231E]">
+        <div className="mx-auto max-w-6xl space-y-8">
+          {/* User Profile Header Card */}
+          <div className="rounded-3xl border border-[#E8E1D5] bg-white p-7 sm:p-9 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+              <div className="flex items-center gap-4">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#1B4332] text-[#E9C46A] shadow-sm font-serif text-2xl font-bold">
+                  {user?.displayName ? user.displayName.slice(0, 2).toUpperCase() : address ? address.slice(2, 4).toUpperCase() : "CD"}
+                </div>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <h1 className="font-serif text-2xl font-bold text-[#1B4332]">
+                      {user?.role === "ARTISAN" ? "Tableau de Bord & Ventes Artisan" : "Tableau de Bord & Séquestre"}
+                    </h1>
+                    <span className="rounded-md bg-[#E8F0EC] px-2.5 py-0.5 text-[11px] font-bold text-[#1B4332] border border-[#C1DBCF]">
+                      Polygon Amoy
+                    </span>
+                  </div>
+                  <p className="font-mono text-xs text-[#6B5E55]">
+                    Portefeuille : {address ? address : "Non connecté"}
+                  </p>
+                </div>
               </div>
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <h1 className="font-serif text-2xl font-bold text-[#1B4332]">
-                    Tableau de Bord & Séquestre
-                  </h1>
-                  <span className="rounded-md bg-[#E8F0EC] px-2.5 py-0.5 text-[11px] font-bold text-[#1B4332] border border-[#C1DBCF]">
-                    Polygon Amoy
+
+              {/* STT Balance and Faucet trigger */}
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="rounded-2xl bg-[#FAF7F2] p-3 px-5 border border-[#E8E1D5] text-left sm:text-right">
+                  <span className="text-[10px] uppercase font-bold text-[#8C7A6B] block">
+                    Solde de simulation
+                  </span>
+                  <span className="font-serif text-2xl font-black text-[#1B4332]">
+                    {sttBalance} <span className="text-sm font-bold text-[#C86D3B]">STT</span>
                   </span>
                 </div>
-                <p className="font-mono text-xs text-[#6B5E55]">
-                  Portefeuille : {address ? address : "0x71C...4b9 (Mode Démonstration)"}
-                </p>
+                <button
+                  onClick={handleClaimFaucet}
+                  disabled={isFauceting}
+                  className="rounded-2xl bg-[#C86D3B] hover:bg-[#B65E2F] px-4 py-3.5 text-xs font-bold text-white shadow-sm transition-all flex items-center gap-1.5 disabled:opacity-50 shrink-0"
+                >
+                  <Coins className="h-4 w-4" />
+                  <span>+100 STT (Robinet)</span>
+                </button>
               </div>
             </div>
 
-            {/* STT Balance and Faucet trigger */}
-            <div className="flex items-center gap-3">
-              <div className="rounded-2xl bg-[#FAF7F2] p-3 px-5 border border-[#E8E1D5] text-right">
-                <span className="text-[10px] uppercase font-bold text-[#8C7A6B] block">
-                  Solde de simulation
-                </span>
-                <span className="font-serif text-2xl font-black text-[#1B4332]">
-                  {sttBalance} <span className="text-sm font-bold text-[#C86D3B]">STT</span>
-                </span>
-              </div>
+            {/* Navigation Tabs - Conditionnés strictement au Rôle */}
+            <div className="mt-8 flex border-b border-[#E8E1D5] gap-3">
               <button
-                onClick={handleClaimFaucet}
-                disabled={isFauceting}
-                className="rounded-2xl bg-[#C86D3B] hover:bg-[#B65E2F] px-4 py-3.5 text-xs font-bold text-white shadow-sm transition-all flex items-center gap-1.5 disabled:opacity-50"
+                onClick={() => setActiveTab("orders")}
+                className={`pb-3.5 px-4 text-xs font-bold border-b-2 transition-all flex items-center gap-2 ${
+                  activeTab === "orders"
+                    ? "border-[#1B4332] text-[#1B4332]"
+                    : "border-transparent text-[#6B5E55] hover:text-[#1B4332]"
+                }`}
               >
-                <Coins className="h-4 w-4" />
-                <span>+100 STT (Robinet)</span>
+                <PackageCheck className="h-4 w-4 text-[#C86D3B]" />
+                <span>
+                  {user?.role === "ARTISAN"
+                    ? `Mes Ventes sous Séquestre (${orders.length})`
+                    : user?.role === "BUYER"
+                    ? `Mes Achats & Séquestres (${orders.length})`
+                    : `Commandes sous Séquestre (${orders.length})`}
+                </span>
               </button>
+
+              {user?.role === "ARTISAN" && (
+                <button
+                  onClick={() => setActiveTab("artisan")}
+                  className={`pb-3.5 px-4 text-xs font-bold border-b-2 transition-all flex items-center gap-2 ${
+                    activeTab === "artisan"
+                      ? "border-[#1B4332] text-[#1B4332]"
+                      : "border-transparent text-[#6B5E55] hover:text-[#1B4332]"
+                  }`}
+                >
+                  <ShieldCheck className="h-4 w-4 text-[#16A34A]" />
+                  <span>Mes Pièces Enregistrées (Artisan)</span>
+                </button>
+              )}
             </div>
           </div>
-
-          {/* Navigation Tabs */}
-          <div className="mt-8 flex border-b border-[#E8E1D5] gap-3">
-            <button
-              onClick={() => setActiveTab("orders")}
-              className={`pb-3.5 px-4 text-xs font-bold border-b-2 transition-all flex items-center gap-2 ${
-                activeTab === "orders"
-                  ? "border-[#1B4332] text-[#1B4332]"
-                  : "border-transparent text-[#6B5E55] hover:text-[#1B4332]"
-              }`}
-            >
-              <PackageCheck className="h-4 w-4 text-[#C86D3B]" />
-              <span>Commandes Physiques & Séquestre ({orders.length})</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab("artisan")}
-              className={`pb-3.5 px-4 text-xs font-bold border-b-2 transition-all flex items-center gap-2 ${
-                activeTab === "artisan"
-                  ? "border-[#1B4332] text-[#1B4332]"
-                  : "border-transparent text-[#6B5E55] hover:text-[#1B4332]"
-              }`}
-            >
-              <ShieldCheck className="h-4 w-4 text-[#16A34A]" />
-              <span>Mes Pièces Enregistrées (Artisan)</span>
-            </button>
-          </div>
-        </div>
 
         {/* Tab 1: Orders & Physical Escrow Tracking */}
         {activeTab === "orders" && (
@@ -260,23 +285,35 @@ export default function MyNFTsPage() {
                     {/* Right: Actions */}
                     <div className="w-full md:w-auto flex flex-col gap-2.5">
                       {isFunded ? (
-                        <button
-                          onClick={() => handleConfirmReception(ord.id)}
-                          disabled={isReleasing === ord.id}
-                          className="w-full md:w-auto rounded-xl bg-[#16A34A] hover:bg-[#15803D] px-6 py-3.5 text-xs font-bold text-white shadow-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-                        >
-                          {isReleasing === ord.id ? (
-                            <>
-                              <Clock className="h-4 w-4 animate-spin" />
-                              <span>Validation blockchain...</span>
-                            </>
-                          ) : (
-                            <>
-                              <PackageCheck className="h-4 w-4" />
-                              <span>Confirmer réception & Libérer fonds</span>
-                            </>
-                          )}
-                        </button>
+                        user?.role === "BUYER" ? (
+                          <button
+                            onClick={() => handleConfirmReception(ord.id)}
+                            disabled={isReleasing === ord.id}
+                            className="w-full md:w-auto rounded-xl bg-[#16A34A] hover:bg-[#15803D] px-6 py-3.5 text-xs font-bold text-white shadow-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                          >
+                            {isReleasing === ord.id ? (
+                              <>
+                                <Clock className="h-4 w-4 animate-spin" />
+                                <span>Validation blockchain...</span>
+                              </>
+                            ) : (
+                              <>
+                                <PackageCheck className="h-4 w-4" />
+                                <span>Confirmer réception & Libérer fonds</span>
+                              </>
+                            )}
+                          </button>
+                        ) : user?.role === "ARTISAN" ? (
+                          <div className="rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-xs text-amber-800 text-center font-medium">
+                            <span className="font-bold block">Paiement sous séquestre</span>
+                            <span className="text-[11px] text-amber-700">En attente de réception physique par le client</span>
+                          </div>
+                        ) : (
+                          <div className="rounded-xl bg-purple-50 border border-purple-200 px-4 py-3 text-xs text-purple-800 text-center font-medium">
+                            <span className="font-bold block">Supervision Administrateur</span>
+                            <span className="text-[11px] text-purple-700">Séquestre actif sur Polygon Amoy</span>
+                          </div>
+                        )
                       ) : (
                         <div className="text-right text-xs space-y-1">
                           <span className="text-[#16A34A] font-bold flex items-center gap-1 justify-end">
@@ -365,5 +402,6 @@ export default function MyNFTsPage() {
         )}
       </div>
     </div>
+    </RoleGuard>
   );
 }

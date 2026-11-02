@@ -48,14 +48,14 @@ export default function TermsPage() {
 
         {/* 5 Principes Clairs */}
         <div className="space-y-6">
-          {/* 1. Cadre Académique & Réseau de Test */}
+          {/* 1. Cadre Réglementaire & Réseau de Test */}
           <div className="rounded-3xl border border-[#E8E1D5] bg-white p-7 shadow-sm space-y-3">
             <div className="flex items-center gap-3 font-bold text-[#1B4332] text-sm">
               <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#1B4332] text-white text-xs">1</span>
-              <span>Cadre Académique et Jetons de Démonstration</span>
+              <span>Cadre Technique et Jetons de Démonstration</span>
             </div>
             <p className="text-xs text-[#6B5E55] leading-relaxed">
-              SENDA est un prototype académique développé à la Faculté des Sciences et Technologies de l&apos;Université de Kinshasa (Master 1 Informatique). Il est déployé sur le réseau de test public <strong>Polygon Amoy</strong>.
+              SENDA est une plateforme décentralisée d&apos;artisanat d&apos;art congolais déployée sur le réseau de test public <strong>Polygon Amoy</strong>.
             </p>
             <div className="rounded-xl bg-[#FAF7F2] p-3 text-[11px] text-[#4A3B33] border border-[#E8E1D5] flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4 text-[#16A34A] shrink-0" />
@@ -139,9 +139,9 @@ export default function TermsPage() {
           </div>
         </div>
 
-        {/* Footer info UNIKIN */}
+        {/* Footer info SENDA */}
         <div className="text-center text-xs text-[#8C7A6B] pt-4">
-          Projet SENDA • Master 1 Mathématiques, Statistiques et Informatique • Université de Kinshasa 2026
+          Plateforme SENDA • Marché Décentralisé d&apos;Artisanat Congolais • Kinshasa 2026
         </div>
       </div>
     </div>

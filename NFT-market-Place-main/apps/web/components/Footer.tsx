@@ -1,8 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { ShieldCheck, Lock, ExternalLink, Award, FileCode2 } from "lucide-react";
-import { DEFAULT_CONTRACTS } from "@/lib/contracts/abis";
-import { formatAddress } from "@/lib/utils";
+import { ShieldCheck, Lock, Award, Compass, MapPin } from "lucide-react";
 
 export function Footer() {
   return (
@@ -21,70 +19,77 @@ export function Footer() {
             </div>
             <p className="max-w-md text-sm leading-relaxed text-[#A7C4B5]">
               Marketplace décentralisée de l&apos;artisanat de la République démocratique du Congo.
-              Chaque création physique est enregistrée via un certificat NFT ERC-721 sur Polygon Amoy,
-              protégée par un protocole de paiement sous séquestre conditionnel et conservée sur IPFS.
+              Chaque création physique est enregistrée avec un certificat d&apos;authenticité numérique,
+              protégée par un protocole de paiement sous séquestre conditionnel et conservée de façon permanente.
             </p>
             <div className="flex flex-wrap items-center gap-3 text-xs text-[#E8F0EC]">
               <span className="inline-flex items-center gap-1.5 rounded-md bg-[#1B4332] px-3 py-1.5 border border-[#2D6A4F]">
-                <Lock className="h-3.5 w-3.5 text-[#E9C46A]" /> Séquestre Physique SendaEscrow
+                <Lock className="h-3.5 w-3.5 text-[#E9C46A]" /> Séquestre Garanti
               </span>
               <span className="inline-flex items-center gap-1.5 rounded-md bg-[#1B4332] px-3 py-1.5 border border-[#2D6A4F]">
                 <ShieldCheck className="h-3.5 w-3.5 text-[#16A34A]" /> Certification d&apos;Ateliers
               </span>
               <span className="inline-flex items-center gap-1.5 rounded-md bg-[#1B4332] px-3 py-1.5 border border-[#2D6A4F]">
-                <Award className="h-3.5 w-3.5 text-[#C86D3B]" /> Redevances Créateurs ERC-2981
+                <Award className="h-3.5 w-3.5 text-[#C86D3B]" /> Rémunération Équitable des Artisans
               </span>
             </div>
           </div>
 
-          {/* Projet académique & Équipe */}
+          {/* Catégories d'Artisanat */}
           <div className="space-y-3">
             <h4 className="font-serif text-sm font-semibold uppercase tracking-wider text-[#E9C46A]">
-              Projet Académique
+              Collections & Artisanat
             </h4>
-            <div className="space-y-2 text-xs text-[#A7C4B5]">
-              <p className="font-semibold text-white">Master 1 Informatique (2026–2027)</p>
-              <p className="text-[11px] text-[#C1DBCF]">Groupe 02 :</p>
-              <ul className="space-y-1 pl-2">
-                <li>• Kabongo Mukola Nathan <span className="text-[10px] text-[#E9C46A]">(Frontend & Web3)</span></li>
-                <li>• Losongo Kingombe Victor <span className="text-[10px] text-[#E9C46A]">(Smart Contracts)</span></li>
-                <li>• Tuasansilu Lufuma Benie <span className="text-[10px] text-[#E9C46A]">(Backend & IPFS)</span></li>
-              </ul>
-            </div>
+            <ul className="space-y-2 text-xs text-[#A7C4B5]">
+              <li>
+                <Link href="/#catalogue" className="hover:text-white transition-colors">
+                  Masques traditionnels (Pende, Kuba)
+                </Link>
+              </li>
+              <li>
+                <Link href="/#catalogue" className="hover:text-white transition-colors">
+                  Statuettes & Sculptures (Tshokwe, Luba)
+                </Link>
+              </li>
+              <li>
+                <Link href="/#catalogue" className="hover:text-white transition-colors">
+                  Textiles & Velours Shoowa
+                </Link>
+              </li>
+              <li>
+                <Link href="/#catalogue" className="hover:text-white transition-colors">
+                  Vannerie & Céramiques du Kwilu
+                </Link>
+              </li>
+              <li>
+                <Link href="/#catalogue" className="hover:text-white transition-colors">
+                  Bijoux & Pectoraux en Malachite
+                </Link>
+              </li>
+            </ul>
           </div>
 
-          {/* Infrastructure Web3 */}
+          {/* Engagements & Confiance */}
           <div className="space-y-3">
             <h4 className="font-serif text-sm font-semibold uppercase tracking-wider text-[#E9C46A]">
-              Infrastructure On-Chain
+              Garanties & Confiance
             </h4>
-            <ul className="space-y-2 text-xs">
-              <li>
-                <a
-                  href="https://amoy.polygonscan.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 transition-colors hover:text-[#E9C46A]"
-                >
-                  Polygon Amoy (Chain ID 80002) <ExternalLink className="h-3 w-3" />
-                </a>
+            <ul className="space-y-2 text-xs text-[#A7C4B5]">
+              <li className="flex items-center gap-1.5">
+                <ShieldCheck className="h-3.5 w-3.5 text-[#16A34A] shrink-0" />
+                <span>Audit sur site des ateliers</span>
               </li>
-              <li>
-                <span className="text-[#A7C4B5] block">Jeton de démonstration :</span>
-                <span className="font-semibold text-white">STT (Senda Test Token)</span>
+              <li className="flex items-center gap-1.5">
+                <Lock className="h-3.5 w-3.5 text-[#E9C46A] shrink-0" />
+                <span>Fonds bloqués jusqu&apos;à réception</span>
               </li>
-              <li>
-                <span className="text-[#A7C4B5] block">Stockage Décentralisé :</span>
-                <span className="font-semibold text-white">IPFS via Pinata Gateway</span>
+              <li className="flex items-center gap-1.5">
+                <Award className="h-3.5 w-3.5 text-[#C86D3B] shrink-0" />
+                <span>Redevances reversées aux créateurs</span>
               </li>
-              <li className="pt-2">
-                <Link
-                  href="/terms"
-                  className="inline-flex items-center gap-1 text-[#E9C46A] hover:underline font-medium"
-                >
-                  <FileCode2 className="h-3 w-3" />
-                  Politique d&apos;Usage & Éthique IA
-                </Link>
+              <li className="flex items-center gap-1.5">
+                <MapPin className="h-3.5 w-3.5 text-[#E9C46A] shrink-0" />
+                <span>Traçabilité des provinces de RDC</span>
               </li>
             </ul>
           </div>
@@ -92,13 +97,10 @@ export function Footer() {
 
         <div className="mt-12 border-t border-[#1B4332] pt-6 flex flex-col md:flex-row items-center justify-between text-xs text-[#7B9E8D] gap-4">
           <p>
-            © {new Date().getFullYear()} SENDA — L&apos;artisanat congolais, authentifié et valorisé. •{" "}
-            <Link href="/terms" className="text-[#A7C4B5] hover:text-[#E9C46A] underline">
-              Politique d&apos;Usage & Éthique
-            </Link>
+            © {new Date().getFullYear()} SENDA — L&apos;artisanat congolais, authentifié et valorisé. Tous droits réservés.
           </p>
-          <p className="text-[11px]">
-            Plateforme conforme aux spécifications académiques (UNIKIN Master 1)
+          <p className="text-[11px] text-[#A7C4B5]">
+            Kinshasa • Kwilu • Kasaï • Katanga • Kongo Central
           </p>
         </div>
       </div>

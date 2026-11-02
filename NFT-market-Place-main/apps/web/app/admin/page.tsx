@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
+import { RoleGuard } from "@/components/RoleGuard";
 import {
   ShieldAlert,
   CheckCircle2,
@@ -150,34 +151,8 @@ export default function AdminPage() {
     }
   };
 
-  // Si l'utilisateur n'est pas connecté en tant qu'administrateur
-  if (!user || user.role !== "ADMIN") {
-    return (
-      <div className="min-h-[80vh] flex items-center justify-center px-4 py-16 bg-[#F8F5F0]">
-        <div className="max-w-md w-full rounded-3xl bg-white p-8 text-center border border-[#E8E1D5] shadow-xl space-y-5">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-50 text-amber-600 border border-amber-200">
-            <ShieldAlert className="h-8 w-8" />
-          </div>
-          <div>
-            <h2 className="font-serif text-xl font-bold text-[#1B4332]">Accès Administrateur Restreint</h2>
-            <p className="text-xs text-[#6B5A4E] mt-2">
-              Cet espace de modération et de certification est strictement réservé au corps académique et aux vérificateurs de SENDA.
-            </p>
-          </div>
-          <div className="pt-2">
-            <Link
-              href="/login"
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#1B4332] px-6 py-2.5 text-xs font-bold text-[#E9C46A] shadow-md hover:bg-[#143427] transition-all"
-            >
-              <span>Se connecter comme Administrateur</span>
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
+    <RoleGuard allowedRoles={["ADMIN"]} showDeniedScreen redirectOnDeny>
     <div className="min-h-screen bg-[#F8F5F0] py-10 px-4 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl space-y-8">
         {/* Titre & Statut */}
@@ -185,7 +160,7 @@ export default function AdminPage() {
           <div>
             <div className="inline-flex items-center gap-2 rounded-full bg-[#1B4332]/10 px-3 py-1 text-xs font-bold text-[#1B4332] mb-2 border border-[#1B4332]/20">
               <Sparkles className="h-3 w-3 text-[#C86D3B]" />
-              <span>UNIKIN Master 1 • Faculté des Sciences & Technologies</span>
+              <span>Administration & Contrôle • Plateforme SENDA</span>
             </div>
             <h1 className="font-serif text-3xl font-extrabold text-[#1B4332]">
               Espace de Modération & Certification
@@ -198,7 +173,7 @@ export default function AdminPage() {
           <div className="flex items-center gap-3">
             <div className="rounded-2xl border border-[#E8E1D5] bg-white px-4 py-2 shadow-xs">
               <p className="text-[10px] text-[#8C7A6B] font-bold uppercase tracking-wider">Modérateur connecté</p>
-              <p className="text-xs font-bold text-[#1B4332]">{user.displayName}</p>
+              <p className="text-xs font-bold text-[#1B4332]">{user?.displayName || "Administrateur"}</p>
             </div>
           </div>
         </div>
@@ -273,24 +248,24 @@ export default function AdminPage() {
                 >
                   <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                     <div className="space-y-2">
-                      <div className="flex items-center gap-2.5">
+                      <div className="flex flex-wrap items-center gap-2">
                         <span className="font-bold text-sm text-[#1B4332]">{dossier.artisanName}</span>
-                        <span className="text-xs text-[#8C7A6B]">•</span>
+                        <span className="text-xs text-[#8C7A6B] hidden sm:inline">•</span>
                         <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#C86D3B]">
-                          <Building2 className="h-3 w-3" />
+                          <Building2 className="h-3 w-3 shrink-0" />
                           {dossier.workshopName}
                         </span>
                         <span className="inline-flex items-center gap-1 rounded-full bg-white border border-[#E8E1D5] px-2 py-0.5 text-[10px] text-[#4A3B33]">
-                          <MapPin className="h-3 w-3 text-[#C86D3B]" />
+                          <MapPin className="h-3 w-3 text-[#C86D3B] shrink-0" />
                           {dossier.province}
                         </span>
                       </div>
 
                       <p className="text-xs text-[#4A3B33] max-w-2xl">{dossier.bio}</p>
 
-                      <div className="flex items-center gap-2 pt-1 text-[11px] font-mono text-[#8C7A6B]">
+                      <div className="flex flex-wrap items-center gap-2 pt-1 text-[11px] font-mono text-[#8C7A6B]">
                         <span>Wallet certifié :</span>
-                        <span className="bg-white px-2 py-0.5 rounded border border-[#E8E1D5] font-bold text-[#1B4332]">
+                        <span className="bg-white px-2 py-0.5 rounded border border-[#E8E1D5] font-bold text-[#1B4332] break-all">
                           {dossier.walletAddress}
                         </span>
                       </div>
@@ -471,5 +446,6 @@ export default function AdminPage() {
         </div>
       )}
     </div>
+    </RoleGuard>
   );
 }

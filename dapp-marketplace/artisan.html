@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SENDA — Espace Artisan & Publication</title>
+  <link rel="stylesheet" href="style.css">
+  <script type="importmap">
+    { "imports": { "ethers": "https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.2/ethers.min.js" } }
+  </script>
+</head>
+<body>
+
+  <!-- Barre de Navigation Supérieure -->
+  <header>
+    <div class="header-container">
+      <a href="index.html" class="logo-group">
+        <div class="logo-badge">S</div>
+        <div>
+          <h1 class="logo-title">SENDA</h1>
+          <p class="logo-subtitle">Portail Artisan • Polygon Amoy</p>
+        </div>
+      </a>
+
+      <nav>
+        <a href="index.html">Catalogue Public</a>
+        <a href="artisan.html" class="active">Espace Artisan</a>
+      </nav>
+
+      <div class="wallet-section">
+        <button id="btnConnecter">Connecter Portefeuille Artisan</button>
+        <span id="compteArtisan" class="badge-wallet" style="display: none;">Non connecté</span>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- Bannière Artisan -->
+    <section class="hero-banner">
+      <h2>Espace Maître Artisan</h2>
+      <p>
+        Publiez vos créations artisanales directement sur la blockchain <strong>Polygon Amoy</strong>. 
+        Votre adresse publique est capturée automatiquement via <code>msg.sender</code>. 
+        À chaque commande d'un acheteur, les fonds en <strong>POL</strong> vous sont transférés instantanément et directement, sans aucun intermédiaire.
+      </p>
+    </section>
+
+    <div style="display: grid; grid-template-columns: 1fr; gap: 30px;">
+      
+      <!-- 1. Formulaire de Publication d'une Œuvre -->
+      <section>
+        <div class="form-card" style="max-width: 100%;">
+          <h3 style="margin-top: 0; color: var(--senda-green); font-size: 19px; border-bottom: 1px solid var(--senda-border); padding-bottom: 12px;">
+            ✦ Publier une Nouvelle Création Artisanale
+          </h3>
+
+          <div id="zone-statut-artisan" class="info-box" style="display: none;"></div>
+
+          <form id="formAjoutOeuvre" onsubmit="return false;">
+            <div class="form-group">
+              <label for="titre">Titre de l'Œuvre *</label>
+              <input type="text" id="titre" placeholder="Ex: Statuette Royale Kuba — Nyim Mbope" required maxlength="100">
+            </div>
+
+            <div class="form-group">
+              <label for="description">Description & Fiche Matières *</label>
+              <textarea id="description" rows="3" placeholder="Ex: Bois noble d'iroko, patine d'huile de palme et kaolin blanc. Hauteur 32 cm. Réalisé à la main." required maxlength="500"></textarea>
+            </div>
+
+            <div class="form-group">
+              <label for="image">Lien de l'Image (URL HTTPS ou IPFS) *</label>
+              <input type="url" id="image" placeholder="https://images.unsplash.com/photo-1579783902614-a3fb3927b675" required>
+            </div>
+
+            <div class="form-group">
+              <label for="prix">Prix en POL (Monnaie native Polygon Amoy) *</label>
+              <input type="number" id="prix" step="0.0001" min="0.0001" placeholder="Ex: 0.001" required>
+              <small style="color: var(--senda-muted); font-size: 11px; display: block; margin-top: 4px;">
+                💡 Pour vos tests sur Amoy : <strong>0.001 POL</strong> équivaut à un micropaiement rapide et facile à tester.
+              </small>
+            </div>
+
+            <div style="margin-top: 24px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+              <button type="submit" id="btnPublier" class="btn-ochre">
+                🚀 Enregistrer et Publier sur Amoy
+              </button>
+              <span id="indicateurPublication" style="font-size: 12px; color: var(--senda-muted);"></span>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- 2. Gestion des Œuvres de l'Artisan -->
+      <section>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+          <h3 style="margin: 0; color: var(--senda-green); font-size: 20px;">Mes Pièces Répertoriées sur la Blockchain</h3>
+          <button id="btnActualiserMesOeuvres" class="btn-secondary">Actualiser mes pièces</button>
+        </div>
+
+        <div id="mes-oeuvres-info" class="info-box">Connectez votre portefeuille MetaMask pour visualiser et gérer vos créations.</div>
+        <div id="mes-oeuvres-grid" class="grid"></div>
+      </section>
+
+    </div>
+  </main>
+
+  <script type="module">
+    import { BrowserProvider, JsonRpcProvider, Contract, parseEther, formatEther } from "ethers";
+    import { CONTRACT_ADDRESS, CONTRACT_ABI, AMOY_CONFIG, verifierReseauAmoy } from "./config.js";
+
+    let signer = null;
+    let provider = null;
+    let adresseArtisan = null;
+
+    // Instance de lecture directe sur Amoy
+    const providerLecture = new JsonRpcProvider(AMOY_CONFIG.rpcUrls[0]);
+    const contratLecture = new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, providerLecture);
+
+    /**
+     * Connexion MetaMask avec vérification du réseau Polygon Amoy
+     */
+    async function connecterArtisan() {
+      try {
+        await verifierReseauAmoy();
+        provider = new BrowserProvider(window.ethereum);
+        await provider.send("eth_requestAccounts", []);
+        signer = await provider.getSigner();
+        adresseArtisan = (await signer.getAddress()).toLowerCase();
+
+        const badge = document.getElementById("compteArtisan");
+        badge.style.display = "inline-block";
+        badge.textContent = `${adresseArtisan.slice(0,6)}...${adresseArtisan.slice(-4)}`;
+
+        const btn = document.getElementById("btnConnecter");
+        btn.textContent = "Connecté";
+        btn.className = "btn-secondary";
+
+        // Vérifier si la modération est active
+        verifierStatutValidation();
+
+        // Charger les créations de cet artisan
+        chargerMesOeuvres();
+
+      } catch (err) {
+        alert("Connexion impossible : " + (err.reason || err.message));
+      }
+    }
+
+    /**
+     * Vérifie si l'adresse a besoin d'une homologation selon validationRequise
+     */
+    async function verifierStatutValidation() {
+      const zone = document.getElementById("zone-statut-artisan");
+      if (!CONTRACT_ADDRESS || CONTRACT_ADDRESS === "0x0000000000000000000000000000000000000000") return;
+
+      try {
+        const requise = await contratLecture.validationRequise();
+        if (requise) {
+          const estValide = await contratLecture.artisanValide(adresseArtisan);
+          zone.style.display = "block";
+          if (estValide) {
+            zone.innerHTML = "✅ <strong>Atelier homologué :</strong> Votre adresse est validée par l'administrateur Senda. Vous pouvez publier.";
+            zone.style.borderColor = "#16A34A";
+          } else {
+            zone.innerHTML = "⚠️ <strong>Homologation requise :</strong> Le mode validation est activé sur ce contrat et votre adresse n'est pas encore enregistrée par l'administrateur.";
+            zone.style.borderColor = "#C86D3B";
+          }
+        } else {
+          zone.style.display = "none";
+        }
+      } catch (e) {
+        console.warn("Vérification statut validation :", e.message);
+      }
+    }
+
+    /**
+     * Publication d'une nouvelle œuvre sur la blockchain
+     */
+    async function publierOeuvre() {
+      if (!signer) {
+        alert("Veuillez d'abord connecter votre portefeuille MetaMask.");
+        await connecterArtisan();
+        if (!signer) return;
+      }
+
+      const titre = document.getElementById("titre").value.trim();
+      const description = document.getElementById("description").value.trim();
+      const image = document.getElementById("image").value.trim();
+      const prixPol = document.getElementById("prix").value;
+
+      if (!titre || !description || !image || !prixPol) {
+        alert("Veuillez remplir tous les champs obligatoires (*).");
+        return;
+      }
+
+      const btnPublier = document.getElementById("btnPublier");
+      const indicateur = document.getElementById("indicateurPublication");
+
+      try {
+        await verifierReseauAmoy();
+        btnPublier.disabled = true;
+        indicateur.textContent = "Signature de la transaction dans MetaMask...";
+
+        const contratSigne = new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+        const prixEnWei = parseEther(prixPol.toString());
+
+        // Appel de ajouterOeuvre(titre, description, image, prix)
+        const tx = await contratSigne.ajouterOeuvre(titre, description, image, prixEnWei);
+        indicateur.textContent = `Transaction envoyée ! Validation en cours... (Hash: ${tx.hash.slice(0, 10)}...)`;
+
+        const recu = await tx.wait();
+        indicateur.textContent = "";
+        alert(`Succès ! Votre œuvre « ${titre} » est inscrite sur la blockchain dans le bloc n°${recu.blockNumber} !\nElle est immédiatement visible dans le catalogue public.`);
+
+        // Réinitialiser le formulaire
+        document.getElementById("formAjoutOeuvre").reset();
+        chargerMesOeuvres();
+
+      } catch (err) {
+        indicateur.textContent = "";
+        alert("Erreur lors de la publication : " + (err.reason || err.message));
+      } finally {
+        btnPublier.disabled = false;
+      }
+    }
+
+    /**
+     * Charge et filtre les œuvres appartenant à l'artisan connecté
+     */
+    async function chargerMesOeuvres() {
+      const zoneInfo = document.getElementById("mes-oeuvres-info");
+      const grid = document.getElementById("mes-oeuvres-grid");
+
+      if (!adresseArtisan) {
+        zoneInfo.style.display = "block";
+        zoneInfo.textContent = "Veuillez connecter votre portefeuille MetaMask pour afficher vos œuvres.";
+        grid.innerHTML = "";
+        return;
+      }
+
+      if (!CONTRACT_ADDRESS || CONTRACT_ADDRESS === "0x0000000000000000000000000000000000000000") {
+        zoneInfo.style.display = "block";
+        zoneInfo.innerHTML = "Veuillez renseigner l'adresse du contrat dans <code>config.js</code>.";
+        grid.innerHTML = "";
+        return;
+      }
+
+      zoneInfo.style.display = "block";
+      zoneInfo.textContent = "Chargement de vos pièces depuis la blockchain...";
+
+      try {
+        const catalogue = await contratLecture.getCatalogue();
+        const mesPieces = catalogue.filter(o => o.artisan.toLowerCase() === adresseArtisan);
+
+        grid.innerHTML = "";
+
+        if (mesPieces.length === 0) {
+          zoneInfo.textContent = "Vous n'avez pas encore publié d'œuvre avec ce portefeuille. Utilisez le formulaire ci-dessus !";
+          return;
+        }
+
+        zoneInfo.style.display = "none";
+
+        mesPieces.forEach(o => {
+          // Création XSS-safe
+          const carte = document.createElement("div");
+          carte.className = "carte";
+
+          // Image
+          const imgWrap = document.createElement("div");
+          imgWrap.className = "carte-img-wrap";
+
+          const img = document.createElement("img");
+          img.src = o.image;
+          img.alt = o.titre;
+          img.onerror = () => { img.src = "https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=500&auto=format&fit=crop&q=60"; };
+
+          const badgeId = document.createElement("span");
+          badgeId.className = "carte-badge-id";
+          badgeId.textContent = `#${o.id}`;
+
+          imgWrap.append(img, badgeId);
+
+          // Body
+          const body = document.createElement("div");
+          body.className = "carte-body";
+
+          const headerLigne = document.createElement("div");
+          headerLigne.style.display = "flex";
+          headerLigne.style.justifyContent = "space-between";
+          headerLigne.style.alignItems = "center";
+
+          const h3 = document.createElement("h3");
+          h3.textContent = o.titre;
+
+          const statutBadge = document.createElement("span");
+          statutBadge.className = `statut-badge ${o.active ? 'statut-dispo' : 'statut-vendu'}`;
+          statutBadge.textContent = o.active ? "En vente" : "Désactivée";
+
+          headerLigne.append(h3, statutBadge);
+
+          const desc = document.createElement("p");
+          desc.className = "desc";
+          desc.textContent = o.description;
+
+          // Footer
+          const footer = document.createElement("div");
+          footer.className = "carte-footer";
+
+          const prixContainer = document.createElement("div");
+          prixContainer.className = "prix-container";
+
+          const prixLabel = document.createElement("span");
+          prixLabel.className = "prix-label";
+          prixLabel.textContent = "Prix fixé";
+
+          const prixVal = document.createElement("div");
+          prixVal.className = "prix-valeur";
+          prixVal.textContent = formatEther(o.prix) + " ";
+          const polUnit = document.createElement("span");
+          polUnit.textContent = "POL";
+          prixVal.appendChild(polUnit);
+
+          prixContainer.append(prixLabel, prixVal);
+
+          // Boutons de gestion artisan
+          const actionsBox = document.createElement("div");
+          actionsBox.style.display = "flex";
+          actionsBox.style.gap = "6px";
+
+          // 1. Bouton Activer / Désactiver
+          const btnToggle = document.createElement("button");
+          btnToggle.className = "btn-secondary";
+          btnToggle.style.fontSize = "11px";
+          btnToggle.style.padding = "6px 10px";
+          btnToggle.textContent = o.active ? "Désactiver" : "Activer";
+          btnToggle.onclick = () => modifierStatut(o.id, o.prix, !o.active);
+
+          // 2. Bouton Modifier Prix
+          const btnChangerPrix = document.createElement("button");
+          btnChangerPrix.className = "btn-secondary";
+          btnChangerPrix.style.fontSize = "11px";
+          btnChangerPrix.style.padding = "6px 10px";
+          btnChangerPrix.textContent = "Changer Prix";
+          btnChangerPrix.onclick = () => changerPrix(o.id, o.active);
+
+          actionsBox.append(btnToggle, btnChangerPrix);
+          footer.append(prixContainer, actionsBox);
+
+          body.append(headerLigne, desc, footer);
+          carte.append(imgWrap, body);
+          grid.appendChild(carte);
+        });
+
+      } catch (err) {
+        zoneInfo.style.display = "block";
+        zoneInfo.textContent = "Erreur de chargement : " + (err.reason || err.message);
+      }
+    }
+
+    /**
+     * Modification du statut actif/inactif
+     */
+    async function modifierStatut(idOeuvre, prixActuel, nouvelEtat) {
+      if (!signer) return;
+      try {
+        await verifierReseauAmoy();
+        const contratSigne = new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+        const tx = await contratSigne.modifierOeuvre(idOeuvre, prixActuel, nouvelEtat);
+        await tx.wait();
+        alert(`Œuvre #${idOeuvre} ${nouvelEtat ? 'réactivée' : 'désactivée'} avec succès !`);
+        chargerMesOeuvres();
+      } catch (err) {
+        alert("Erreur de modification : " + (err.reason || err.message));
+      }
+    }
+
+    /**
+     * Modification du prix
+     */
+    async function changerPrix(idOeuvre, etatActuel) {
+      if (!signer) return;
+      const nouveauPrix = prompt("Entrez le nouveau prix en POL (ex: 0.002) :");
+      if (!nouveauPrix || isNaN(nouveauPrix) || Number(nouveauPrix) <= 0) return;
+
+      try {
+        await verifierReseauAmoy();
+        const contratSigne = new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+        const tx = await contratSigne.modifierOeuvre(idOeuvre, parseEther(nouveauPrix), etatActuel);
+        await tx.wait();
+        alert(`Prix de l'œuvre #${idOeuvre} mis à jour à ${nouveauPrix} POL !`);
+        chargerMesOeuvres();
+      } catch (err) {
+        alert("Erreur de mise à jour du prix : " + (err.reason || err.message));
+      }
+    }
+
+    // Événements
+    document.getElementById("btnConnecter").onclick = connecterArtisan;
+    document.getElementById("formAjoutOeuvre").onsubmit = publierOeuvre;
+    document.getElementById("btnActualiserMesOeuvres").onclick = chargerMesOeuvres;
+
+    // Détection changement de compte dans MetaMask
+    if (window.ethereum) {
+      window.ethereum.on("accountsChanged", (comptes) => {
+        if (comptes.length > 0) {
+          connecterArtisan();
+        } else {
+          location.reload();
+        }
+      });
+    }
+  </script>
+</body>
+</html>

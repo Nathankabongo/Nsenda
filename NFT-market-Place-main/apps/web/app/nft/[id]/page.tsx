@@ -23,8 +23,10 @@ import { BuyModal } from "@/components/BuyModal";
 import { INITIAL_DEMO_NFTS, NFTItem } from "@/lib/mockData";
 import { DEFAULT_CONTRACTS } from "@/lib/contracts/abis";
 import { formatAddress } from "@/lib/utils";
+import { useAuth } from "@/context/AuthContext";
 
 export default function NFTDetailPage() {
+  const { user } = useAuth();
   const params = useParams();
   const router = useRouter();
   const tokenIdParam = params?.id as string;
@@ -73,19 +75,21 @@ export default function NFTDetailPage() {
                 />
                 
                 {/* Top Badges */}
-                <div className="absolute top-4 left-4 flex items-center gap-2 flex-wrap">
-                  <span className="rounded-full bg-[#1B4332]/95 backdrop-blur-md px-3.5 py-1.5 text-xs font-bold text-white shadow-sm flex items-center gap-1.5 border border-[#2D6A4F]/60">
-                    <MapPin className="h-3.5 w-3.5 text-[#E9C46A]" />
-                    {nft.artisanProvince}
-                  </span>
-                  <span className="rounded-full bg-[#E8F0EC]/95 border border-[#C1DBCF] px-3 py-1.5 text-xs font-bold text-[#1B4332] flex items-center gap-1 shadow-sm">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-[#16A34A]" />
-                    {nft.artisanVerificationStatus}
-                  </span>
-                </div>
+                <div className="absolute top-4 left-4 right-4 flex items-center justify-between gap-2 pointer-events-none">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="rounded-full bg-[#1B4332]/95 backdrop-blur-md px-3 py-1 text-xs font-bold text-white shadow-sm flex items-center gap-1.5 border border-[#2D6A4F]/60">
+                      <MapPin className="h-3.5 w-3.5 text-[#E9C46A]" />
+                      {nft.artisanProvince}
+                    </span>
+                    <span className="rounded-full bg-[#E8F0EC]/95 border border-[#C1DBCF] px-3 py-1 text-xs font-bold text-[#1B4332] flex items-center gap-1 shadow-sm">
+                      <CheckCircle2 className="h-3.5 w-3.5 text-[#16A34A]" />
+                      {nft.artisanVerificationStatus}
+                    </span>
+                  </div>
 
-                <div className="absolute bottom-4 right-4 rounded-xl bg-white/95 backdrop-blur-md border border-[#E8E1D5] px-3.5 py-1.5 text-xs font-mono font-bold text-[#1B4332] shadow-sm">
-                  Certificat #{nft.tokenId}
+                  <div className="rounded-xl bg-white/95 backdrop-blur-md border border-[#E8E1D5] px-3 py-1 text-xs font-mono font-bold text-[#1B4332] shadow-sm shrink-0">
+                    Certificat #{nft.tokenId}
+                  </div>
                 </div>
               </div>
 
@@ -171,43 +175,57 @@ export default function NFTDetailPage() {
                 </div>
               </div>
 
-              {/* Purchase Button */}
-              <button
-                onClick={() => setIsBuyModalOpen(true)}
-                className="w-full rounded-2xl bg-[#1B4332] hover:bg-[#143728] py-4 text-sm font-bold text-white shadow-md transition-all flex items-center justify-center gap-2 hover:shadow-lg"
-              >
-                <Lock className="h-4 w-4 text-[#E9C46A]" />
-                <span>Commander avec Séquestre ({nft.price} STT)</span>
-              </button>
+              {/* Purchase Button - Strictement conditionné au rôle */}
+              {user?.role === "BUYER" ? (
+                <button
+                  onClick={() => setIsBuyModalOpen(true)}
+                  className="w-full rounded-2xl bg-[#1B4332] hover:bg-[#143728] py-4 text-sm font-bold text-white shadow-md transition-all flex items-center justify-center gap-2 hover:shadow-lg hover:scale-101"
+                >
+                  <Lock className="h-4 w-4 text-[#E9C46A]" />
+                  <span>Commander avec Séquestre ({nft.price} STT)</span>
+                </button>
+              ) : !user ? (
+                <Link
+                  href="/login"
+                  className="w-full rounded-2xl bg-[#1B4332] hover:bg-[#143728] py-4 text-sm font-bold text-[#E9C46A] shadow-md transition-all flex items-center justify-center gap-2 text-center"
+                >
+                  <Lock className="h-4 w-4 text-[#E9C46A]" />
+                  <span>Se connecter pour commander ({nft.price} STT)</span>
+                </Link>
+              ) : (
+                <div className="rounded-2xl bg-[#FAF7F2] p-4 text-center border border-[#E8E1D5] text-xs text-[#6B5E55]">
+                  Fiche en mode consultation pour <strong>{user.role === "ARTISAN" ? "Artisan Créateur" : "Administrateur"}</strong>. L&apos;action de commande sous séquestre est exclusivement réservée aux Acheteurs.
+                </div>
+              )}
             </div>
 
             {/* 3-Level Information Tabs (Section 6.2 & 9.1 PLANSENDA.pdf) */}
             <div className="rounded-3xl border border-[#E8E1D5] bg-white overflow-hidden shadow-sm">
-              {/* Tab Navigation */}
-              <div className="flex border-b border-[#E8E1D5] bg-[#FAF7F2]">
+              {/* Tab Navigation - Défilement propre sans superposition */}
+              <div className="flex border-b border-[#E8E1D5] bg-[#FAF7F2] overflow-x-auto scrollbar-none">
                 <button
                   onClick={() => setActiveTab("technical")}
-                  className={`flex-1 py-4 text-xs font-bold transition-all border-b-2 ${
+                  className={`flex-1 min-w-[130px] whitespace-nowrap py-3.5 px-3 sm:px-4 text-xs font-bold transition-all border-b-2 text-center shrink-0 ${
                     activeTab === "technical"
                       ? "border-[#1B4332] text-[#1B4332] bg-white"
                       : "border-transparent text-[#6B5E55] hover:text-[#1B4332]"
                   }`}
                 >
-                  1. Fiche Technique & Origine
+                  1. Fiche Technique
                 </button>
                 <button
                   onClick={() => setActiveTab("audit")}
-                  className={`flex-1 py-4 text-xs font-bold transition-all border-b-2 ${
+                  className={`flex-1 min-w-[130px] whitespace-nowrap py-3.5 px-3 sm:px-4 text-xs font-bold transition-all border-b-2 text-center shrink-0 ${
                     activeTab === "audit"
                       ? "border-[#1B4332] text-[#1B4332] bg-white"
                       : "border-transparent text-[#6B5E55] hover:text-[#1B4332]"
                   }`}
                 >
-                  2. Audit & Vérification
+                  2. Audit & Atelier
                 </button>
                 <button
                   onClick={() => setActiveTab("blockchain")}
-                  className={`flex-1 py-4 text-xs font-bold transition-all border-b-2 ${
+                  className={`flex-1 min-w-[130px] whitespace-nowrap py-3.5 px-3 sm:px-4 text-xs font-bold transition-all border-b-2 text-center shrink-0 ${
                     activeTab === "blockchain"
                       ? "border-[#1B4332] text-[#1B4332] bg-white"
                       : "border-transparent text-[#6B5E55] hover:text-[#1B4332]"
@@ -217,14 +235,14 @@ export default function NFTDetailPage() {
                 </button>
                 <button
                   onClick={() => setActiveTab("ai")}
-                  className={`flex-1 py-4 text-xs font-bold transition-all border-b-2 flex items-center justify-center gap-1.5 ${
+                  className={`flex-1 min-w-[130px] whitespace-nowrap py-3.5 px-3 sm:px-4 text-xs font-bold transition-all border-b-2 flex items-center justify-center gap-1.5 text-center shrink-0 ${
                     activeTab === "ai"
                       ? "border-[#1B4332] text-[#1B4332] bg-white shadow-inner"
                       : "border-transparent text-[#C86D3B] hover:text-[#1B4332]"
                   }`}
                 >
                   <Sparkles className="h-3.5 w-3.5 text-[#E9C46A]" />
-                  <span>4. IA & Authenticité</span>
+                  <span>4. IA SendaVision</span>
                 </button>
               </div>
 

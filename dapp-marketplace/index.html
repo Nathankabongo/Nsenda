@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SENDA — Catalogue Décentralisé de l'Artisanat</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Chargement d'ethers.js v6 via CDN standard -->
+  <script type="importmap">
+    { "imports": { "ethers": "https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.2/ethers.min.js" } }
+  </script>
+</head>
+<body>
+
+  <!-- Barre de Navigation Supérieure -->
+  <header>
+    <div class="header-container">
+      <a href="index.html" class="logo-group">
+        <div class="logo-badge">S</div>
+        <div>
+          <h1 class="logo-title">SENDA</h1>
+          <p class="logo-subtitle">Marketplace d'Artisanat • Polygon Amoy</p>
+        </div>
+      </a>
+
+      <nav>
+        <a href="index.html" class="active">Catalogue Public</a>
+        <a href="artisan.html">Espace Artisan</a>
+      </nav>
+
+      <div class="wallet-section">
+        <button id="btnConnecter">Connecter MetaMask</button>
+        <span id="compteAcheteur" class="badge-wallet" style="display: none;">Non connecté</span>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- Bannière Explicative -->
+    <section class="hero-banner">
+      <h2>Créations Authentiques Congolaises</h2>
+      <p>
+        Chaque création physique est répertoriée de façon immuable sur <strong>Polygon Amoy</strong>. 
+        Le paiement va <strong>directement et instantanément</strong> du portefeuille de l'acheteur à celui de l'artisan créateur, sans intermédiaire qui garde les fonds.
+      </p>
+    </section>
+
+    <!-- Section Catalogue -->
+    <section>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+        <h3 style="margin: 0; color: var(--senda-green); font-size: 20px;">Catalogue en Temps Réel</h3>
+        <button id="btnActualiser" class="btn-secondary">Actualiser</button>
+      </div>
+
+      <div id="zone-info" class="info-box">Lecture du catalogue sur Polygon Amoy...</div>
+      <div id="catalogue-grid" class="grid"></div>
+    </section>
+  </main>
+
+  <script type="module">
+    import { BrowserProvider, JsonRpcProvider, Contract, formatEther } from "ethers";
+    import { CONTRACT_ADDRESS, CONTRACT_ABI, AMOY_CONFIG, verifierReseauAmoy } from "./config.js";
+
+    let signer = null;
+    let provider = null;
+    let adresseConnectee = null;
+
+    // 1. Instance de lecture seule (utilise le nœud RPC public Polygon Amoy sans exiger MetaMask)
+    const providerLecture = new JsonRpcProvider(AMOY_CONFIG.rpcUrls[0]);
+    const contratLecture = new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, providerLecture);
+
+    /**
+     * Charge et affiche toutes les œuvres actives du catalogue
+     */
+    async function chargerCatalogue() {
+      const zoneInfo = document.getElementById("zone-info");
+      const grid = document.getElementById("catalogue-grid");
+
+      // Vérification que le contrat a été renseigné
+      if (!CONTRACT_ADDRESS || CONTRACT_ADDRESS === "0x0000000000000000000000000000000000000000") {
+        zoneInfo.style.display = "block";
+        zoneInfo.innerHTML = "<strong>Configuration requise :</strong> Veuillez déployer le contrat <code>SendaMarketplace.sol</code> sur Remix, puis renseigner l'adresse obtenue dans le fichier <code>config.js</code>.";
+        grid.innerHTML = "";
+        return;
+      }
+
+      zoneInfo.style.display = "block";
+      zoneInfo.textContent = "Interrogation de la blockchain Polygon Amoy...";
+
+      try {
+        const oeuvres = await contratLecture.getCatalogue();
+        grid.innerHTML = "";
+
+        // Filtrer uniquement les œuvres actives
+        const oeuvresActives = oeuvres.filter(o => o.active);
+
+        if (oeuvresActives.length === 0) {
+          zoneInfo.textContent = "Aucune œuvre disponible pour le moment. Rendez-vous sur l'Espace Artisan pour en publier une !";
+          return;
+        }
+
+        zoneInfo.style.display = "none";
+
+        oeuvresActives.forEach(o => {
+          // Création sécurisée des éléments DOM (Protection XSS garantie : aucun innerHTML non sécurisé)
+          const carte = document.createElement("div");
+          carte.className = "carte";
+
+          // Cadre Image
+          const imgWrap = document.createElement("div");
+          imgWrap.className = "carte-img-wrap";
+
+          const img = document.createElement("img");
+          img.src = o.image;
+          img.alt = o.titre;
+          img.onerror = () => { img.src = "https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=500&auto=format&fit=crop&q=60"; };
+
+          const badgeId = document.createElement("span");
+          badgeId.className = "carte-badge-id";
+          badgeId.textContent = `#${o.id}`;
+
+          imgWrap.append(img, badgeId);
+
+          // Corps de carte
+          const body = document.createElement("div");
+          body.className = "carte-body";
+
+          const h3 = document.createElement("h3");
+          h3.textContent = o.titre; // textContent protège contre l'injection XSS
+
+          const desc = document.createElement("p");
+          desc.className = "desc";
+          desc.textContent = o.description; // textContent protège contre l'injection XSS
+
+          const meta = document.createElement("div");
+          meta.className = "artisan-meta";
+          meta.textContent = `Créateur : ${o.artisan.slice(0, 6)}...${o.artisan.slice(-4)}`;
+
+          // Pied de carte : Prix et Commande
+          const footer = document.createElement("div");
+          footer.className = "carte-footer";
+
+          const prixContainer = document.createElement("div");
+          prixContainer.className = "prix-container";
+
+          const prixLabel = document.createElement("span");
+          prixLabel.className = "prix-label";
+          prixLabel.textContent = "Prix direct";
+
+          const prixVal = document.createElement("div");
+          prixVal.className = "prix-valeur";
+          prixVal.textContent = formatEther(o.prix) + " ";
+          const polUnit = document.createElement("span");
+          polUnit.textContent = "POL";
+          prixVal.appendChild(polUnit);
+
+          prixContainer.append(prixLabel, prixVal);
+
+          const btnCommander = document.createElement("button");
+          btnCommander.className = "btn-ochre";
+          btnCommander.textContent = "Commander";
+          btnCommander.onclick = () => passerCommande(o.id, o.prix, o.titre);
+
+          footer.append(prixContainer, btnCommander);
+
+          body.append(h3, desc, meta, footer);
+          carte.append(imgWrap, body);
+          grid.appendChild(carte);
+        });
+
+      } catch (err) {
+        zoneInfo.style.display = "block";
+        zoneInfo.textContent = "Erreur de connexion RPC Polygon Amoy : " + (err.reason || err.message);
+      }
+    }
+
+    /**
+     * Connexion du portefeuille MetaMask acheteur
+     */
+    async function connecterMetaMask() {
+      try {
+        await verifierReseauAmoy();
+        provider = new BrowserProvider(window.ethereum);
+        await provider.send("eth_requestAccounts", []);
+        signer = await provider.getSigner();
+        adresseConnectee = await signer.getAddress();
+
+        const badge = document.getElementById("compteAcheteur");
+        badge.style.display = "inline-block";
+        badge.textContent = `${adresseConnectee.slice(0,6)}...${adresseConnectee.slice(-4)}`;
+
+        const btn = document.getElementById("btnConnecter");
+        btn.textContent = "Connecté";
+        btn.className = "btn-secondary";
+      } catch (err) {
+        alert("Connexion impossible : " + (err.reason || err.message));
+      }
+    }
+
+    /**
+     * Commande d'une œuvre avec paiement direct à l'artisan
+     */
+    async function passerCommande(idOeuvre, prixWei, titre) {
+      if (!signer) {
+        alert("Veuillez d'abord connecter votre portefeuille MetaMask pour passer commande.");
+        await connecterMetaMask();
+        if (!signer) return;
+      }
+
+      try {
+        await verifierReseauAmoy();
+        const contratSigne = new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+
+        const btnCommander = event?.target;
+        if (btnCommander) {
+          btnCommander.disabled = true;
+          btnCommander.textContent = "Confirmation...";
+        }
+
+        // Appel du contrat intelligent : la valeur exacte msg.value est transmise
+        const tx = await contratSigne.commander(idOeuvre, { value: prixWei });
+        alert(`Transaction envoyée sur Polygon Amoy !\nHash : ${tx.hash}\n\nVeuillez patienter pendant la validation sur la blockchain...`);
+
+        const recu = await tx.wait();
+        alert(`Félicitations ! L'œuvre « ${titre} » a été achetée.\n\nLe paiement de ${formatEther(prixWei)} POL a été transféré directement au créateur dans le bloc n°${recu.blockNumber}.`);
+
+        // Recharger le catalogue pour refléter le nouveau statut
+        chargerCatalogue();
+
+      } catch (err) {
+        alert("Erreur lors de la commande : " + (err.reason || err.message));
+      } finally {
+        const btnCommander = event?.target;
+        if (btnCommander) {
+          btnCommander.disabled = false;
+          btnCommander.textContent = "Commander";
+        }
+      }
+    }
+
+    // Écouteurs d'événements
+    document.getElementById("btnConnecter").onclick = connecterMetaMask;
+    document.getElementById("btnActualiser").onclick = chargerCatalogue;
+
+    // Écoute temps réel des événements de la blockchain
+    if (CONTRACT_ADDRESS && CONTRACT_ADDRESS !== "0x0000000000000000000000000000000000000000") {
+      try {
+        contratLecture.on("OeuvreAjoutee", () => {
+          console.log("Nouvelle œuvre détectée sur la blockchain !");
+          chargerCatalogue();
+        });
+        contratLecture.on("CommandePassee", () => {
+          console.log("Nouvelle commande passée sur la blockchain !");
+          chargerCatalogue();
+        });
+      } catch (e) {
+        console.warn("Écoute des événements désactivée sur ce RPC :", e.message);
+      }
+    }
+
+    // Chargement initial
+    chargerCatalogue();
+  </script>
+</body>
+</html>

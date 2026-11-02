@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import {
   Sparkles,
@@ -15,6 +15,16 @@ import {
   Package,
   Award,
   Users,
+  ShieldAlert,
+  ShoppingBag,
+  Palette,
+  FileCheck2,
+  Clock,
+  History,
+  AlertTriangle,
+  Building2,
+  ExternalLink,
+  Wallet,
 } from "lucide-react";
 import { NFTCard } from "@/components/NFTCard";
 import { BuyModal } from "@/components/BuyModal";
@@ -25,8 +35,14 @@ import {
   SENDA_CATEGORIES,
 } from "@/lib/mockData";
 import { getArtworks } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
+import { useAccount } from "wagmi";
+import { formatAddress } from "@/lib/utils";
 
 export default function HomePage() {
+  const { user } = useAuth();
+  const { isConnected, address } = useAccount();
+
   const [artworks, setArtworks] = useState<NFTItem[]>(INITIAL_DEMO_NFTS);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("Toutes catégories");
@@ -35,8 +51,8 @@ export default function HomePage() {
   const [selectedNFTForBuy, setSelectedNFTForBuy] = useState<NFTItem | null>(null);
   const [isBuyModalOpen, setIsBuyModalOpen] = useState(false);
 
-  // Synchronisation dynamique avec le backend REST si disponible
-  React.useEffect(() => {
+  // Synchronisation dynamique avec le backend REST
+  useEffect(() => {
     getArtworks({
       category: selectedCategory,
       province: selectedProvince,
@@ -49,7 +65,7 @@ export default function HomePage() {
     });
   }, [selectedCategory, selectedProvince, searchQuery, sortBy]);
 
-  // Filter and Sort NFTs
+  // Filtrage des œuvres
   const filteredNFTs = useMemo(() => {
     return artworks
       .filter((item) => {
@@ -93,19 +109,581 @@ export default function HomePage() {
     setIsBuyModalOpen(true);
   };
 
+  // =========================================================================
+  // VUE 1 : ACCUEIL ARTISAN (Tableau de bord, statistiques, dernières ventes)
+  // =========================================================================
+  if (user?.role === "ARTISAN") {
+    const artisanArtworks = artworks.filter(
+      (a) => a.artisanName.toLowerCase().includes("mukendi") || a.seller?.toLowerCase() === address?.toLowerCase()
+    );
+
+    return (
+      <div className="min-h-screen bg-[#F8F5F0] text-[#2D231E]">
+        {/* Hero Artisan */}
+        <section className="bg-[#1B4332] text-white py-14 px-4 sm:px-6 lg:px-8 border-b border-[#2D6A4F]">
+          <div className="mx-auto max-w-7xl">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-8 border-b border-[#2D6A4F]/70">
+              <div className="space-y-2">
+                <div className="inline-flex items-center gap-2 rounded-full bg-[#2D6A4F]/80 border border-[#16A34A]/40 px-3.5 py-1 text-xs font-bold text-[#A7F3D0]">
+                  <ShieldCheck className="h-4 w-4 text-[#16A34A]" />
+                  <span>Espace Maître Artisan • {user.workshopName || "Atelier Royal du Kwilu"}</span>
+                </div>
+                <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-black text-white">
+                  Tableau de Bord — {user.displayName}
+                </h1>
+                <p className="text-xs sm:text-sm text-[#C1DBCF] max-w-2xl leading-relaxed">
+                  Bienvenue dans votre atelier numérique. Enregistrez vos nouvelles sculptures et suivez vos paiements sécurisés sous séquestre.
+                </p>
+              </div>
+
+              {/* Bouton d'action exclusif Artisan */}
+              <div className="flex flex-wrap items-center gap-3">
+                <Link
+                  href="/create"
+                  className="rounded-xl bg-[#C86D3B] hover:bg-[#B65E2F] px-5 py-3 text-xs sm:text-sm font-bold text-white shadow-lg transition-all flex items-center gap-2 hover:scale-102"
+                >
+                  <PlusCircle className="h-4 w-4 text-[#E9C46A]" />
+                  <span>+ Ajouter une œuvre</span>
+                </Link>
+
+                <Link
+                  href="/my-nfts?tab=orders"
+                  className="rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 px-4 py-3 text-xs sm:text-sm font-bold text-white transition-all flex items-center gap-2"
+                >
+                  <Package className="h-4 w-4 text-[#E9C46A]" />
+                  <span>Mes Ventes</span>
+                </Link>
+              </div>
+            </div>
+
+            {/* Avertissement Portefeuille si non connecté */}
+            {!isConnected && (
+              <div className="mt-6 rounded-2xl bg-amber-500/20 border border-amber-400/40 p-4 flex items-center justify-between text-xs text-amber-200">
+                <div className="flex items-center gap-2.5">
+                  <Wallet className="h-4 w-4 text-amber-300 shrink-0" />
+                  <span>
+                    Votre portefeuille Web3 n&apos;est pas connecté. Cliquez sur <strong>« Connect Wallet »</strong> dans la barre supérieure pour signer vos émissions NFT et percevoir vos fonds.
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* 3 Cartes Statistiques Artisan */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 pt-8">
+              <div className="rounded-2xl bg-[#081C15]/70 border border-[#2D6A4F] p-5 space-y-2">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[#A7C4B5] block">
+                  Œuvres Publiées au Catalogue
+                </span>
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <span className="font-serif text-3xl font-black text-[#E9C46A]">
+                    {artisanArtworks.length > 0 ? artisanArtworks.length : 8}
+                  </span>
+                  <span className="text-xs text-emerald-400 font-semibold">Certifiées On-Chain</span>
+                </div>
+              </div>
+
+              <div className="rounded-2xl bg-[#081C15]/70 border border-[#2D6A4F] p-5 space-y-2">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[#A7C4B5] block">
+                  Commandes sous Séquestre
+                </span>
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <span className="font-serif text-3xl font-black text-[#E9C46A]">2</span>
+                  <span className="text-xs text-amber-300 font-semibold">1 en cours • 1 livrée</span>
+                </div>
+              </div>
+
+              <div className="rounded-2xl bg-[#081C15]/70 border border-[#2D6A4F] p-5 space-y-2">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[#A7C4B5] block">
+                  Revenus de Ventes & Redevances
+                </span>
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <span className="font-serif text-3xl font-black text-[#E9C46A]">
+                    300 <span className="text-sm font-bold text-[#C86D3B]">STT</span>
+                  </span>
+                  <span className="text-xs text-[#A7C4B5] font-semibold">Redevance 5% ERC-2981</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Section Dernières Ventes de l'Artisan */}
+        <section className="py-12 px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+            <div>
+              <h2 className="font-serif text-2xl font-bold text-[#1B4332]">
+                Dernières Ventes sous Séquestre
+              </h2>
+              <p className="text-xs text-[#6B5E55] mt-0.5">
+                Suivi des commandes en cours consignées dans le contrat intelligent <code className="font-mono text-[#1B4332]">SendaEscrow.sol</code>
+              </p>
+            </div>
+            <Link
+              href="/my-nfts?tab=orders"
+              className="text-xs font-bold text-[#C86D3B] hover:underline flex items-center gap-1 shrink-0"
+            >
+              <span>Consulter l&apos;historique complet</span>
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-12">
+            {/* Vente 1 : En cours d'expédition */}
+            <div className="rounded-2xl bg-white border border-[#E8E1D5] p-5 shadow-sm space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-[#EAE3D6]">
+                <div className="flex items-center gap-2.5">
+                  <div className="h-8 w-8 rounded-xl bg-amber-100 flex items-center justify-center text-amber-800 shrink-0">
+                    <Clock className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-[#1B4332]">Commande #ord-001</h4>
+                    <p className="text-[10px] text-[#8C7A6B]">Acheteur : Collectionneur Lumumba</p>
+                  </div>
+                </div>
+                <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 border border-amber-200 shrink-0">
+                  🟡 En cours de séquestre (Funded)
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-[#6B5E55]">Masque Royal Pende — Mbuya</span>
+                <span className="font-serif font-bold text-[#1B4332]">180 STT bloqués</span>
+              </div>
+              <p className="text-[11px] text-[#8C7A6B] bg-[#FAF7F2] p-2.5 rounded-xl border border-[#F0EBE1]">
+                Fonds garantis dans le smart contract. Les jetons seront virés dès que l&apos;acheteur confirme la réception.
+              </p>
+            </div>
+
+            {/* Vente 2 : Clôturée */}
+            <div className="rounded-2xl bg-white border border-[#E8E1D5] p-5 shadow-sm space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-[#EAE3D6]">
+                <div className="flex items-center gap-2.5">
+                  <div className="h-8 w-8 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-800 shrink-0">
+                    <CheckCircle2 className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-[#1B4332]">Commande #ord-002</h4>
+                    <p className="text-[10px] text-[#8C7A6B]">Livraison attestée par l&apos;acheteur</p>
+                  </div>
+                </div>
+                <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 shrink-0">
+                  🟢 Fonds Transférés (Released)
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-[#6B5E55]">Panier Tressé Traditionnel Bakongo</span>
+                <span className="font-serif font-bold text-emerald-700">120 STT virés</span>
+              </div>
+              <p className="text-[11px] text-emerald-700 bg-emerald-50 p-2.5 rounded-xl border border-emerald-200">
+                Paiement exécuté irrévocablement vers votre portefeuille artisan.
+              </p>
+            </div>
+          </div>
+
+          {/* Section Mes Œuvres au Catalogue */}
+          <div className="border-t border-[#E8E1D5] pt-10">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="font-serif text-xl font-bold text-[#1B4332]">
+                  Mes Œuvres d&apos;Atelier au Catalogue
+                </h3>
+                <p className="text-xs text-[#6B5E55]">
+                  Vos pièces artisanales certifiées et visibles par les acheteurs
+                </p>
+              </div>
+              <Link
+                href="/create"
+                className="text-xs font-bold text-[#1B4332] bg-white border border-[#E8E1D5] px-3.5 py-1.5 rounded-xl hover:border-[#1B4332] transition-colors"
+              >
+                + Ajouter une pièce
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {(artisanArtworks.length > 0 ? artisanArtworks : artworks).map((nft) => (
+                <NFTCard key={nft.id} nft={nft} />
+              ))}
+            </div>
+          </div>
+        </section>
+      </div>
+    );
+  }
+
+  // =========================================================================
+  // VUE 2 : ACCUEIL ACHETEUR (Œuvres à la une, catalogue interactif, bouton Acheter)
+  // =========================================================================
+  if (user?.role === "BUYER") {
+    return (
+      <div className="min-h-screen bg-[#F8F5F0] text-[#2D231E]">
+        {/* Hero Acheteur */}
+        <section className="bg-[#1B4332] text-white py-14 px-4 sm:px-6 lg:px-8 border-b border-[#2D6A4F]">
+          <div className="mx-auto max-w-7xl">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+              <div className="lg:col-span-7 space-y-5">
+                <div className="inline-flex items-center gap-2 rounded-full bg-[#2D6A4F]/80 border border-[#E9C46A]/40 px-3.5 py-1 text-xs font-bold text-[#E9C46A]">
+                  <ShoppingBag className="h-4 w-4 text-[#E9C46A]" />
+                  <span>Espace Collectionneur Privilège • {user.displayName}</span>
+                </div>
+
+                <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-black text-white leading-tight">
+                  Chefs-d&apos;Œuvre Authentiques <br />
+                  <span className="text-[#E9C46A]">Garantis sous Séquestre</span>.
+                </h1>
+
+                <p className="text-xs sm:text-sm text-[#C1DBCF] max-w-2xl leading-relaxed">
+                  Acquérez les créations originales de nos maîtres artisans congolais. Vos fonds en jetons STT restent en sécurité dans le smart contract de séquestre jusqu&apos;à ce que vous validiez la réception physique du colis.
+                </p>
+
+                <div className="flex flex-wrap items-center gap-3 pt-2">
+                  <a
+                    href="#catalogue"
+                    className="rounded-xl bg-[#C86D3B] hover:bg-[#B65E2F] px-5 py-3 text-xs sm:text-sm font-bold text-white shadow-lg transition-all flex items-center gap-2"
+                  >
+                    <Search className="h-4 w-4" />
+                    <span>Parcourir le catalogue d&apos;art</span>
+                  </a>
+
+                  <Link
+                    href="/my-nfts?tab=orders"
+                    className="rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 px-4 py-3 text-xs sm:text-sm font-bold text-white transition-all flex items-center gap-2"
+                  >
+                    <Package className="h-4 w-4 text-[#E9C46A]" />
+                    <span>Mes Achats en Cours</span>
+                  </Link>
+                </div>
+              </div>
+
+              {/* Pièce à la une pour Acheteur */}
+              <div className="lg:col-span-5">
+                <div className="rounded-3xl border border-[#2D6A4F] bg-[#081C15]/90 p-5 shadow-2xl backdrop-blur-md">
+                  <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-gradient-to-b from-[#143728] to-[#081C15] flex items-center justify-center p-3 border border-[#2D6A4F]/60">
+                    <img
+                      src="/artworks/masque_pende.jpg"
+                      alt="Masque Royal Pende"
+                      className="h-full w-full object-contain drop-shadow-2xl"
+                    />
+                    <div className="absolute top-3 left-3 rounded-full bg-[#1B4332]/95 border border-[#E9C46A]/50 px-2.5 py-0.5 text-xs font-bold text-[#E9C46A]">
+                      À la Une • Kwilu
+                    </div>
+                  </div>
+
+                  <div className="mt-4 space-y-3">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-[#C86D3B] font-bold uppercase text-[10px] tracking-wider">Masque Traditionnel</span>
+                      <span className="text-emerald-400 font-bold text-[10px]">✓ Atelier Vérifié</span>
+                    </div>
+                    <h3 className="font-serif text-lg font-bold text-white">Masque Royal Pende — Mbuya</h3>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-[#2D6A4F]">
+                      <div>
+                        <span className="text-[10px] text-[#A7C4B5] block uppercase font-medium">Prix garanti séquestre</span>
+                        <span className="font-serif text-xl font-black text-white">
+                          180 <span className="text-xs font-bold text-[#C86D3B]">STT</span>
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => openBuyModal(artworks[0])}
+                        className="rounded-xl bg-[#C86D3B] hover:bg-[#B65E2F] px-4 py-2 text-xs font-bold text-white flex items-center justify-center gap-1.5 transition-all shadow-md shrink-0"
+                      >
+                        <Lock className="h-3.5 w-3.5 text-[#E9C46A]" />
+                        <span>Acheter (Séquestre)</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Catalogue Acheteur avec Bouton Acheter actif */}
+        <section id="catalogue" className="scroll-mt-20 py-14 px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+            <div>
+              <span className="text-xs font-bold text-[#C86D3B] uppercase tracking-wider">
+                Catalogue Officiel d&apos;Acquisition
+              </span>
+              <h2 className="font-serif text-3xl font-extrabold text-[#1B4332] mt-0.5">
+                Créations Artisanales Disponibles à l&apos;Achat
+              </h2>
+              <p className="text-xs text-[#6B5E55] mt-1">
+                Chaque œuvre commandée bénéficie du verrouillage sous séquestre conditionnel SendaEscrow.
+              </p>
+            </div>
+            <div className="text-xs text-[#6B5E55]">
+              <span className="font-bold text-[#1B4332] text-sm">{filteredNFTs.length}</span> créations disponibles
+            </div>
+          </div>
+
+          {/* Filtres & Recherche */}
+          <div className="rounded-3xl border border-[#E8E1D5] bg-white p-4 shadow-sm mb-8 space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3">
+              <div className="lg:col-span-6 relative">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#8C7A6B]" />
+                <input
+                  type="text"
+                  placeholder="Rechercher par œuvre, matière, artisan, province..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full rounded-xl border border-[#E8E1D5] bg-[#FAF7F2] pl-10 pr-4 py-2.5 text-xs text-[#2D231E] focus:outline-none focus:border-[#1B4332]"
+                />
+              </div>
+
+              <div className="lg:col-span-3">
+                <select
+                  value={selectedProvince}
+                  onChange={(e) => setSelectedProvince(e.target.value)}
+                  className="w-full rounded-xl border border-[#E8E1D5] bg-[#FAF7F2] px-3 py-2.5 text-xs text-[#2D231E] focus:outline-none"
+                >
+                  <option value="Toutes les provinces">Toutes les provinces</option>
+                  {CONGO_PROVINCES.map((p) => (
+                    <option key={p} value={p}>{p}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="lg:col-span-3">
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as any)}
+                  className="w-full rounded-xl border border-[#E8E1D5] bg-[#FAF7F2] px-3 py-2.5 text-xs text-[#2D231E] focus:outline-none"
+                >
+                  <option value="newest">Plus récents</option>
+                  <option value="price-asc">Prix croissant (STT)</option>
+                  <option value="price-desc">Prix décroissant (STT)</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Catégories rapides */}
+            <div className="flex items-center gap-2 overflow-x-auto py-2 px-0.5 text-xs scrollbar-none">
+              <button
+                onClick={() => setSelectedCategory("Toutes catégories")}
+                className={`rounded-full px-3.5 py-1.5 font-bold whitespace-nowrap transition-colors shadow-2xs ${
+                  selectedCategory === "Toutes catégories"
+                    ? "bg-[#1B4332] text-white"
+                    : "bg-[#FAF7F2] text-[#6B5E55] hover:bg-[#EFE8DC] border border-[#E8E1D5]"
+                }`}
+              >
+                Toutes
+              </button>
+              {SENDA_CATEGORIES.filter((c) => c !== "Toutes catégories").map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setSelectedCategory(cat)}
+                  className={`rounded-full px-3.5 py-1.5 font-bold whitespace-nowrap transition-colors shadow-2xs ${
+                    selectedCategory === cat
+                      ? "bg-[#1B4332] text-white"
+                      : "bg-[#FAF7F2] text-[#6B5E55] hover:bg-[#EFE8DC] border border-[#E8E1D5]"
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Grille d'œuvres Acheteur (Bouton Acheter présent) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {filteredNFTs.length === 0 ? (
+              <div className="col-span-full py-16 text-center bg-white rounded-3xl border border-[#E8E1D5] p-8 space-y-3">
+                <Compass className="h-10 w-10 text-[#C86D3B] mx-auto opacity-70" />
+                <h3 className="font-serif text-lg font-bold text-[#1B4332]">Aucune œuvre ne correspond à vos critères</h3>
+                <p className="text-xs text-[#6B5E55]">Essayez d&apos;élargir votre recherche ou de réinitialiser les filtres.</p>
+                <button
+                  onClick={() => {
+                    setSearchQuery("");
+                    setSelectedCategory("Toutes catégories");
+                    setSelectedProvince("Toutes les provinces");
+                  }}
+                  className="mt-2 inline-flex items-center gap-1.5 rounded-xl bg-[#FAF7F2] border border-[#E8E1D5] px-4 py-2 text-xs font-bold text-[#C86D3B] hover:bg-[#EFE8DC] transition-colors"
+                >
+                  Réinitialiser les filtres
+                </button>
+              </div>
+            ) : (
+              filteredNFTs.map((nft) => (
+                <NFTCard key={nft.id} nft={nft} onBuy={openBuyModal} />
+              ))
+            )}
+          </div>
+        </section>
+
+        {/* Modal d'Achat sous Séquestre */}
+        <BuyModal
+          nft={selectedNFTForBuy}
+          isOpen={isBuyModalOpen}
+          onClose={() => setIsBuyModalOpen(false)}
+        />
+      </div>
+    );
+  }
+
+  // =========================================================================
+  // VUE 3 : ACCUEIL ADMINISTRATEUR (Console de modération, KPIs, audits)
+  // =========================================================================
+  if (user?.role === "ADMIN") {
+    return (
+      <div className="min-h-screen bg-[#F8F5F0] text-[#2D231E]">
+        {/* Hero Administrateur */}
+        <section className="bg-[#1B4332] text-white py-14 px-4 sm:px-6 lg:px-8 border-b border-[#2D6A4F]">
+          <div className="mx-auto max-w-7xl">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-8 border-b border-[#2D6A4F]/70">
+              <div className="space-y-2">
+                <div className="inline-flex items-center gap-2 rounded-full bg-purple-900/60 border border-purple-400/40 px-3.5 py-1 text-xs font-bold text-purple-200">
+                  <ShieldAlert className="h-4 w-4 text-purple-300" />
+                  <span>Console de Supervision Globale • SENDA RDC</span>
+                </div>
+                <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-black text-white">
+                  Panneau de Contrôle — {user.displayName}
+                </h1>
+                <p className="text-xs sm:text-sm text-[#C1DBCF] max-w-2xl leading-relaxed">
+                  Supervisez les homologations d&apos;ateliers d&apos;artisans, auditez les ordres de séquestre décentralisés et assurez l&apos;intégrité culturelle du catalogue.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3">
+                <Link
+                  href="/admin"
+                  className="rounded-xl bg-purple-700 hover:bg-purple-800 px-5 py-3 text-xs sm:text-sm font-bold text-white shadow-lg transition-all flex items-center gap-2 hover:scale-102"
+                >
+                  <ShieldCheck className="h-4 w-4" />
+                  <span>Panneau d&apos;Administration</span>
+                </Link>
+
+                <Link
+                  href="/my-nfts"
+                  className="rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 px-4 py-3 text-xs sm:text-sm font-bold text-white transition-all flex items-center gap-2"
+                >
+                  <History className="h-4 w-4 text-[#E9C46A]" />
+                  <span>Superviser les Séquestres</span>
+                </Link>
+              </div>
+            </div>
+
+            {/* 4 KPIs Statistiques Globales Plateforme */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-8">
+              <div className="rounded-2xl bg-[#081C15]/70 border border-[#2D6A4F] p-4 space-y-1">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#A7C4B5] block">
+                  Utilisateurs Enregistrés
+                </span>
+                <span className="font-serif text-2xl font-black text-white">4</span>
+                <span className="text-[10px] text-purple-300 block">Artisans & Acheteurs</span>
+              </div>
+
+              <div className="rounded-2xl bg-[#081C15]/70 border border-[#2D6A4F] p-4 space-y-1">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#A7C4B5] block">
+                  Artisans en Attente
+                </span>
+                <span className="font-serif text-2xl font-black text-[#E9C46A]">1</span>
+                <span className="text-[10px] text-amber-300 block">Papa Tshimanga (Kasaï)</span>
+              </div>
+
+              <div className="rounded-2xl bg-[#081C15]/70 border border-[#2D6A4F] p-4 space-y-1">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#A7C4B5] block">
+                  Œuvres Homologuées
+                </span>
+                <span className="font-serif text-2xl font-black text-white">{artworks.length}</span>
+                <span className="text-[10px] text-emerald-400 block">Certificats Polygon Amoy</span>
+              </div>
+
+              <div className="rounded-2xl bg-[#081C15]/70 border border-[#2D6A4F] p-4 space-y-1">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#A7C4B5] block">
+                  Volume sous Séquestre
+                </span>
+                <span className="font-serif text-2xl font-black text-[#E9C46A]">300 STT</span>
+                <span className="text-[10px] text-[#A7C4B5] block">SendaEscrow.sol</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Section Dossier Artisan en Attente de Validation */}
+        <section className="py-12 px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl">
+          <div className="rounded-3xl border border-amber-300/80 bg-amber-50/70 p-6 sm:p-8 mb-10 shadow-sm">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-amber-200">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-100 text-amber-800 border border-amber-300 shrink-0">
+                  <Clock className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="font-serif text-lg font-bold text-[#1B4332]">
+                    Demande de Certification d&apos;Artisan en Attente
+                  </h3>
+                  <p className="text-xs text-[#6B5E55]">
+                    Contrôle physique des ateliers d&apos;artisanat congolais avec justification écrite obligatoire.
+                  </p>
+                </div>
+              </div>
+              <Link
+                href="/admin"
+                className="rounded-xl bg-[#1B4332] hover:bg-[#143728] px-4 py-2.5 text-xs font-bold text-[#E9C46A] flex items-center gap-1.5 transition-colors self-start md:self-auto shrink-0 shadow-xs"
+              >
+                <span>Examiner et valider dans /admin</span>
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+
+            <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs text-[#4A3B33]">
+              <div className="p-2.5 rounded-xl bg-white/70 border border-amber-200/60">
+                <span className="text-[#8C7A6B] block text-[10px] uppercase font-bold">Artisan postulant</span>
+                <strong className="text-[#1B4332]">Papa Tshimanga Kabemba</strong>
+              </div>
+              <div className="p-2.5 rounded-xl bg-white/70 border border-amber-200/60">
+                <span className="text-[#8C7A6B] block text-[10px] uppercase font-bold">Atelier & Province</span>
+                <strong className="text-[#2D231E]">Sculptures Tshokwe (Kasaï)</strong>
+              </div>
+              <div className="p-2.5 rounded-xl bg-white/70 border border-amber-200/60">
+                <span className="text-[#8C7A6B] block text-[10px] uppercase font-bold">Spécialité reconnue</span>
+                <span className="text-[#4A3B33]">Statuettes royales en bois d&apos;iroko</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Inventaire du Catalogue sous Modération */}
+          <div>
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="font-serif text-xl font-bold text-[#1B4332]">
+                  Inventaire des Pièces Artisanales Répertoriées
+                </h3>
+                <p className="text-xs text-[#6B5E55]">
+                  Contrôle de conformité des fiches techniques, certifications et prix sous séquestre
+                </p>
+              </div>
+              <Link
+                href="/admin"
+                className="text-xs font-bold text-[#1B4332] underline"
+              >
+                Gérer les œuvres dans /admin
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {artworks.map((nft) => (
+                <NFTCard key={nft.id} nft={nft} />
+              ))}
+            </div>
+          </div>
+        </section>
+      </div>
+    );
+  }
+
+  // =========================================================================
+  // VUE 4 : ACCUEIL VISITEUR NON CONNECTÉ (Présentation, consultation seule, pas de wallet)
+  // =========================================================================
   return (
     <div className="min-h-screen bg-[#F8F5F0] text-[#2D231E]">
-      {/* 1. Hero Section */}
+      {/* Hero Visiteur */}
       <section className="relative overflow-hidden bg-[#1B4332] text-white py-20 px-4 sm:px-6 lg:px-8 border-b border-[#2D6A4F]">
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#E9C46A_1px,transparent_1px)] [background-size:20px_20px]" />
-        
+
         <div className="relative mx-auto max-w-7xl">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-            {/* Left Col: Headings */}
             <div className="lg:col-span-7 space-y-6">
               <div className="inline-flex items-center gap-2 rounded-full bg-[#2D6A4F]/70 border border-[#E9C46A]/40 px-4 py-1.5 text-xs font-bold text-[#E9C46A] shadow-sm">
                 <ShieldCheck className="h-4 w-4 text-[#E9C46A]" />
-                <span>Marketplace Décentralisée Officielle • République démocratique du Congo</span>
+                <span>Marketplace Décentralisée • République démocratique du Congo</span>
               </div>
 
               <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.12] text-white">
@@ -114,70 +692,66 @@ export default function HomePage() {
               </h1>
 
               <p className="text-base sm:text-lg text-[#C1DBCF] max-w-2xl leading-relaxed">
-                Reliez-vous directement aux maîtres sculpteurs, tisseurs et orfèvres de Kinshasa, du Kwilu, du Kasaï et du Katanga. Chaque création matérielle est protégée par un <strong>certificat NFT ERC-721</strong> sur Polygon Amoy et un protocole de <strong>séquestre décentralisé</strong> : vos fonds ne sont débloqués qu&apos;après confirmation de la livraison physique.
+                Reliez-vous directement aux maîtres sculpteurs, tisseurs et orfèvres de Kinshasa, du Kwilu, du Kasaï et du Katanga. Chaque création matérielle est protégée par un <strong>certificat numérique d&apos;authenticité</strong> et un protocole de <strong>séquestre décentralisé</strong>.
               </p>
 
-              {/* Action Buttons */}
+              {/* Boutons d'Action Visiteur */}
               <div className="flex flex-wrap items-center gap-4 pt-2">
                 <a
                   href="#catalogue"
-                  className="rounded-xl bg-[#C86D3B] hover:bg-[#B65E2F] px-6 py-3.5 text-sm font-bold text-white shadow-lg transition-all flex items-center gap-2 hover:shadow-xl hover:-translate-y-0.5"
+                  className="rounded-xl bg-[#C86D3B] hover:bg-[#B65E2F] px-6 py-3.5 text-sm font-bold text-white shadow-lg transition-all flex items-center gap-2 hover:scale-102"
                 >
                   <Search className="h-4 w-4" />
-                  <span>Explorer le catalogue</span>
+                  <span>Consulter le catalogue (Lecture seule)</span>
                 </a>
 
                 <Link
-                  href="/create"
-                  className="rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 px-6 py-3.5 text-sm font-bold text-white transition-all flex items-center gap-2 hover:-translate-y-0.5"
+                  href="/login"
+                  className="rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 px-6 py-3.5 text-sm font-bold text-white transition-all flex items-center gap-2"
                 >
-                  <PlusCircle className="h-4 w-4 text-[#E9C46A]" />
-                  <span>Publier une œuvre (Artisans)</span>
+                  <ArrowRight className="h-4 w-4 text-[#E9C46A]" />
+                  <span>Se connecter / S&apos;inscrire</span>
                 </Link>
               </div>
 
-              {/* Reassurance Metrics */}
-              <div className="grid grid-cols-3 gap-6 pt-6 border-t border-[#2D6A4F]/70 text-xs">
-                <div>
-                  <span className="font-serif text-3xl font-bold text-[#E9C46A] block">6</span>
-                  <span className="text-[#A7C4B5] font-medium">Provinces de RDC couvertes</span>
+              {/* Métriques de réassurance */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6 pt-6 border-t border-[#2D6A4F]/70 text-xs">
+                <div className="rounded-2xl bg-[#081C15]/40 border border-[#2D6A4F]/50 p-3 sm:p-0 sm:bg-transparent sm:border-0">
+                  <span className="font-serif text-2xl sm:text-3xl font-bold text-[#E9C46A] block">6</span>
+                  <span className="text-[#A7C4B5] font-medium text-xs">Provinces de RDC couvertes</span>
                 </div>
-                <div>
-                  <span className="font-serif text-3xl font-bold text-[#E9C46A] block">100%</span>
-                  <span className="text-[#A7C4B5] font-medium">Ateliers audités sur site</span>
+                <div className="rounded-2xl bg-[#081C15]/40 border border-[#2D6A4F]/50 p-3 sm:p-0 sm:bg-transparent sm:border-0">
+                  <span className="font-serif text-2xl sm:text-3xl font-bold text-[#E9C46A] block">100%</span>
+                  <span className="text-[#A7C4B5] font-medium text-xs">Ateliers audités sur site</span>
                 </div>
-                <div>
-                  <span className="font-serif text-3xl font-bold text-[#E9C46A] block">Escrow</span>
-                  <span className="text-[#A7C4B5] font-medium">Séquestre physique sécurisé</span>
+                <div className="rounded-2xl bg-[#081C15]/40 border border-[#2D6A4F]/50 p-3 sm:p-0 sm:bg-transparent sm:border-0">
+                  <span className="font-serif text-2xl sm:text-3xl font-bold text-[#E9C46A] block">Escrow</span>
+                  <span className="text-[#A7C4B5] font-medium text-xs">Séquestre physique sécurisé</span>
                 </div>
               </div>
             </div>
 
-            {/* Right Col: Hero Card Feature */}
+            {/* Carte de Démonstration */}
             <div className="lg:col-span-5">
               <div className="rounded-3xl border border-[#2D6A4F] bg-[#081C15]/85 p-5 shadow-2xl backdrop-blur-md">
                 <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-gradient-to-b from-[#143728] to-[#081C15] flex items-center justify-center p-3 border border-[#2D6A4F]/60">
                   <img
                     src="/artworks/masque_pende.jpg"
                     alt="Masque Royal Pende"
-                    className="h-full w-full object-contain drop-shadow-2xl transition-transform duration-500 hover:scale-105"
+                    className="h-full w-full object-contain drop-shadow-2xl"
                   />
-                  <div className="absolute top-3 left-3 rounded-full bg-[#1B4332]/95 border border-[#E9C46A]/50 px-3 py-1 text-xs font-bold text-[#E9C46A] shadow-sm flex items-center gap-1.5 pointer-events-none">
-                    <MapPin className="h-3 w-3" />
-                    <span>Gungu • Province du Kwilu</span>
-                  </div>
-                  <div className="absolute bottom-3 right-3 rounded-lg bg-black/80 px-2.5 py-1 text-xs font-mono font-bold text-white pointer-events-none">
-                    NFT #1
+                  <div className="absolute top-3 left-3 rounded-full bg-[#1B4332]/95 border border-[#E9C46A]/50 px-3 py-1 text-xs font-bold text-[#E9C46A]">
+                    Gungu • Kwilu
                   </div>
                 </div>
 
-                <div className="mt-4 space-y-2.5">
-                  <div className="flex items-center justify-between">
+                <div className="mt-4 space-y-3">
+                  <div className="flex items-center justify-between text-xs">
                     <span className="text-xs uppercase tracking-wider text-[#C86D3B] font-bold">
-                      Masques traditionnels Mbuya
+                      Masque traditionnel Mbuya
                     </span>
                     <span className="text-[11px] font-bold text-[#16A34A] bg-[#16A34A]/20 px-2.5 py-0.5 rounded-full border border-[#16A34A]/30">
-                      ✓ Audit sur site SENDA
+                      ✓ Audit sur site
                     </span>
                   </div>
 
@@ -185,27 +759,27 @@ export default function HomePage() {
                     Masque Royal Pende — Mbuya
                   </h3>
 
-                  <p className="text-xs text-[#A7C4B5] leading-relaxed line-clamp-2">
-                    Sculpté à la main en bois de wengé noble par Maître Mukendi. Orné de fibres de raphia et pigments naturels de la forêt équatoriale.
+                  <p className="text-xs text-[#A7C4B5] leading-relaxed">
+                    Sculpté à la main en bois de wengé noble par Maître Mukendi. Orné de fibres de raphia peignées et pigments naturels.
                   </p>
 
-                  <div className="pt-3 border-t border-[#2D6A4F] flex items-center justify-between">
+                  <div className="pt-3.5 border-t border-[#2D6A4F] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
                       <span className="text-[10px] text-[#A7C4B5] block font-medium uppercase tracking-wider">
-                        Prix sous séquestre
+                        Prix indicatif
                       </span>
                       <span className="font-serif text-2xl font-black text-white">
                         180 <span className="text-sm font-bold text-[#C86D3B]">STT</span>
                       </span>
                     </div>
 
-                    <button
-                      onClick={() => openBuyModal(INITIAL_DEMO_NFTS[0])}
-                      className="rounded-xl bg-[#C86D3B] hover:bg-[#B65E2F] px-5 py-2.5 text-xs font-bold text-white transition-all flex items-center gap-2 shadow-sm"
+                    <Link
+                      href="/login"
+                      className="rounded-xl bg-[#C86D3B] hover:bg-[#B65E2F] px-4 py-2.5 text-xs font-bold text-white transition-all flex items-center justify-center gap-1.5 shadow-md shrink-0"
                     >
                       <Lock className="h-3.5 w-3.5 text-[#E9C46A]" />
-                      <span>Commander (Séquestre)</span>
-                    </button>
+                      <span>Commander sous séquestre</span>
+                    </Link>
                   </div>
                 </div>
               </div>
@@ -214,13 +788,12 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 2. 3 Pillars Section */}
-      <section className="py-12 bg-[#FAF7F2] border-b border-[#E8E1D5]">
+      {/* 3 Piliers de Confiance SENDA (À propos) */}
+      <section id="a-propos" className="scroll-mt-20 py-14 bg-[#FAF7F2] border-b border-[#E8E1D5]">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Pilier 1 */}
-            <div className="flex items-start gap-4 p-6 rounded-2xl bg-white border border-[#E8E1D5] shadow-sm">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#E8F0EC] text-[#1B4332]">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="flex flex-col sm:flex-row items-start gap-4 p-6 rounded-3xl bg-white border border-[#E8E1D5] shadow-xs hover:border-[#1B4332]/30 transition-all h-full">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#E8F0EC] text-[#1B4332]">
                 <ShieldCheck className="h-6 w-6" />
               </div>
               <div className="space-y-1">
@@ -228,14 +801,13 @@ export default function HomePage() {
                   1. Traçabilité Culturelle Authentifiée
                 </h4>
                 <p className="text-xs text-[#6B5E55] leading-relaxed">
-                  Identification physique des maîtres artisans en RDC, des matières employées et de l&apos;origine avant l&apos;émission du certificat NFT ERC-721.
+                  Contrôle physique des ateliers d&apos;artisanat en RDC, des essences de bois et pigments naturels employés.
                 </p>
               </div>
             </div>
 
-            {/* Pilier 2 */}
-            <div className="flex items-start gap-4 p-6 rounded-2xl bg-white border border-[#E8E1D5] shadow-sm">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#FBF0EA] text-[#C86D3B]">
+            <div className="flex flex-col sm:flex-row items-start gap-4 p-6 rounded-3xl bg-white border border-[#E8E1D5] shadow-xs hover:border-[#1B4332]/30 transition-all h-full">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#FBF0EA] text-[#C86D3B]">
                 <Lock className="h-6 w-6" />
               </div>
               <div className="space-y-1">
@@ -243,14 +815,13 @@ export default function HomePage() {
                   2. Séquestre Décentralisé
                 </h4>
                 <p className="text-xs text-[#6B5E55] leading-relaxed">
-                  Paiement sécurisé via le contrat intelligent <code className="font-mono text-[#1B4332]">SendaEscrow</code>. Les fonds ne sont libérés que lorsque l&apos;acheteur confirme la livraison.
+                  Paiement sécurisé via le contrat intelligent <code className="font-mono text-[#1B4332]">SendaEscrow</code>. Les fonds ne sont libérés qu&apos;après confirmation de la livraison physique.
                 </p>
               </div>
             </div>
 
-            {/* Pilier 3 */}
-            <div className="flex items-start gap-4 p-6 rounded-2xl bg-white border border-[#E8E1D5] shadow-sm">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#FEF3C7] text-[#D97706]">
+            <div className="flex flex-col sm:flex-row items-start gap-4 p-6 rounded-3xl bg-white border border-[#E8E1D5] shadow-xs hover:border-[#1B4332]/30 transition-all h-full">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#FAF0E6] text-[#8C5228]">
                 <Award className="h-6 w-6" />
               </div>
               <div className="space-y-1">
@@ -258,7 +829,7 @@ export default function HomePage() {
                   3. Redevances Créateurs (ERC-2981)
                 </h4>
                 <p className="text-xs text-[#6B5E55] leading-relaxed">
-                  L&apos;artisan créateur perçoit automatiquement 5% à 10% sur chaque revente future de son œuvre sur les places de marché secondaires.
+                  L&apos;artisan créateur perçoit automatiquement 5% à 10% sur toute revente future de son œuvre.
                 </p>
               </div>
             </div>
@@ -266,369 +837,128 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 3. Main Catalogue Section */}
-      <section id="catalogue" className="py-16 px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl">
-        {/* Section Header */}
+      {/* Aperçu du Catalogue en Lecture Seule pour Visiteur */}
+      <section id="catalogue" className="scroll-mt-20 py-16 px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
           <div>
             <div className="flex items-center gap-2 text-xs font-bold text-[#C86D3B] uppercase tracking-wider mb-1">
               <Sparkles className="h-3.5 w-3.5" />
-              <span>Patrimoine Artisanal Vivant</span>
+              <span>Aperçu des Collections Nationales</span>
             </div>
             <h2 className="font-serif text-3xl font-extrabold text-[#1B4332]">
-              Catalogue des Créations Congolaises
+              Catalogue en Consultation Libre
             </h2>
             <p className="text-sm text-[#6B5E55] mt-1">
-              Explorez les œuvres physiques d&apos;exception avec double numérique NFT et commande sous séquestre.
+              Explorez les chefs-d&apos;œuvre répertoriés. Connectez-vous avec un compte acheteur pour commander sous séquestre.
             </p>
           </div>
 
-          <div className="text-xs text-[#6B5E55]">
-            Affichage de <span className="font-bold text-[#1B4332] text-sm">{filteredNFTs.length}</span> créations disponibles
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-[#6B5E55] hidden sm:inline">
+              <strong className="text-[#1B4332]">{filteredNFTs.length}</strong> œuvres disponibles
+            </span>
+            <Link
+              href="/login"
+              className="rounded-xl bg-[#1B4332] text-[#E9C46A] px-4 py-2.5 text-xs font-bold hover:bg-[#143728] transition-colors shadow-sm"
+            >
+              Se connecter pour commander
+            </Link>
           </div>
         </div>
 
-        {/* Filter Controls Card Bar */}
-        <div className="rounded-3xl border border-[#E8E1D5] bg-white p-5 shadow-sm space-y-4 mb-10">
-          {/* Row 1: Search + Province + Sort */}
+        {/* Filtres & Recherche Visiteur */}
+        <div className="rounded-3xl border border-[#E8E1D5] bg-white p-4 shadow-sm mb-8 space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3">
-            {/* Search Input */}
             <div className="lg:col-span-6 relative">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#8C7A6B]" />
               <input
                 type="text"
-                placeholder="Rechercher par nom, artisan, bois, province (ex: Pende, Kwilu, malachite)..."
+                placeholder="Rechercher une statue, masque, artisan, matière..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-xl border border-[#E8E1D5] bg-[#FAF7F2] pl-10 pr-4 py-3 text-sm text-[#2D231E] placeholder-[#8C7A6B] focus:border-[#1B4332] focus:bg-white focus:outline-none shadow-inner"
+                className="w-full rounded-xl border border-[#E8E1D5] bg-[#FAF7F2] pl-10 pr-4 py-2.5 text-xs text-[#2D231E] focus:outline-none focus:border-[#1B4332]"
               />
             </div>
 
-            {/* Province Filter */}
             <div className="lg:col-span-3">
               <select
                 value={selectedProvince}
                 onChange={(e) => setSelectedProvince(e.target.value)}
-                className="w-full rounded-xl border border-[#E8E1D5] bg-[#FAF7F2] px-3.5 py-3 text-sm text-[#2D231E] focus:border-[#1B4332] focus:bg-white focus:outline-none font-medium"
+                className="w-full rounded-xl border border-[#E8E1D5] bg-[#FAF7F2] px-3 py-2.5 text-xs text-[#2D231E] focus:outline-none"
               >
+                <option value="Toutes les provinces">Toutes les provinces</option>
                 {CONGO_PROVINCES.map((p) => (
-                  <option key={p} value={p}>
-                    {p === "Toutes les provinces" ? "🌍 Toutes les provinces de RDC" : `Province : ${p}`}
-                  </option>
+                  <option key={p} value={p}>{p}</option>
                 ))}
               </select>
             </div>
 
-            {/* Sort Dropdown */}
             <div className="lg:col-span-3">
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as any)}
-                className="w-full rounded-xl border border-[#E8E1D5] bg-[#FAF7F2] px-3.5 py-3 text-sm text-[#2D231E] focus:border-[#1B4332] focus:bg-white focus:outline-none font-medium"
+                className="w-full rounded-xl border border-[#E8E1D5] bg-[#FAF7F2] px-3 py-2.5 text-xs text-[#2D231E] focus:outline-none"
               >
-                <option value="newest">🕒 Plus récentes d&apos;abord</option>
-                <option value="price-asc">📈 Prix : Croissant (STT)</option>
-                <option value="price-desc">📉 Prix : Décroissant (STT)</option>
+                <option value="newest">Plus récents</option>
+                <option value="price-asc">Prix croissant (STT)</option>
+                <option value="price-desc">Prix décroissant (STT)</option>
               </select>
             </div>
           </div>
 
-          {/* Row 2: Category Pills */}
-          <div className="flex items-center gap-2 overflow-x-auto pt-1 pb-1 scrollbar-none border-t border-[#F0EBE1]">
-            {SENDA_CATEGORIES.map((cat) => {
-              const isSelected = selectedCategory === cat;
-              return (
-                <button
-                  key={cat}
-                  onClick={() => setSelectedCategory(cat)}
-                  className={`rounded-full px-4 py-2 text-xs font-bold whitespace-nowrap transition-all shadow-sm ${
-                    isSelected
-                      ? "bg-[#1B4332] text-white"
-                      : "bg-[#FAF7F2] text-[#4A3B33] border border-[#E8E1D5] hover:bg-white"
-                  }`}
-                >
-                  {cat}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Artworks Grid */}
-        {filteredNFTs.length === 0 ? (
-          <div className="text-center py-20 rounded-3xl border border-dashed border-[#E8E1D5] bg-white p-8 space-y-3">
-            <Package className="h-10 w-10 text-[#8C7A6B] mx-auto" />
-            <h3 className="font-serif text-lg font-bold text-[#1B4332]">
-              Aucune œuvre ne correspond à vos critères
-            </h3>
-            <p className="text-xs text-[#6B5E55] max-w-sm mx-auto">
-              Modifiez votre recherche textuelle ou réinitialisez les filtres de catégorie et de province.
-            </p>
+          {/* Catégories rapides */}
+          <div className="flex items-center gap-2 overflow-x-auto py-2 px-0.5 text-xs scrollbar-none">
             <button
-              onClick={() => {
-                setSearchQuery("");
-                setSelectedCategory("Toutes catégories");
-                setSelectedProvince("Toutes les provinces");
-              }}
-              className="mt-2 rounded-xl bg-[#1B4332] px-5 py-2.5 text-xs font-bold text-white shadow-sm"
+              onClick={() => setSelectedCategory("Toutes catégories")}
+              className={`rounded-full px-3.5 py-1.5 font-bold whitespace-nowrap transition-colors shadow-2xs ${
+                selectedCategory === "Toutes catégories"
+                  ? "bg-[#1B4332] text-white"
+                  : "bg-[#FAF7F2] text-[#6B5E55] hover:bg-[#EFE8DC] border border-[#E8E1D5]"
+              }`}
             >
-              Réinitialiser les filtres
+              Toutes
             </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredNFTs.map((nft) => (
-              <NFTCard
-                key={nft.id}
-                nft={nft}
-                onBuy={openBuyModal}
-              />
+            {SENDA_CATEGORIES.filter((c) => c !== "Toutes catégories").map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`rounded-full px-3.5 py-1.5 font-bold whitespace-nowrap transition-colors shadow-2xs ${
+                  selectedCategory === cat
+                    ? "bg-[#1B4332] text-white"
+                    : "bg-[#FAF7F2] text-[#6B5E55] hover:bg-[#EFE8DC] border border-[#E8E1D5]"
+                }`}
+              >
+                {cat}
+              </button>
             ))}
           </div>
-        )}
-      </section>
+        </div>
 
-      {/* 4. Featured Artisans of Congo Section */}
-      <section className="py-16 bg-white border-t border-b border-[#E8E1D5]">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-12 space-y-2">
-            <div className="flex items-center justify-center gap-1.5 text-xs font-bold text-[#C86D3B] uppercase tracking-wider">
-              <Users className="h-4 w-4" />
-              <span>Maîtres Créateurs & Ateliers</span>
+        {/* Grille d'œuvres Visiteur (Pas de bouton Acheter direct) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {filteredNFTs.length === 0 ? (
+            <div className="col-span-full py-16 text-center bg-white rounded-3xl border border-[#E8E1D5] p-8 space-y-3">
+              <Compass className="h-10 w-10 text-[#C86D3B] mx-auto opacity-70" />
+              <h3 className="font-serif text-lg font-bold text-[#1B4332]">Aucune création trouvée</h3>
+              <p className="text-xs text-[#6B5E55]">Essayez d&apos;élargir vos termes de recherche ou de réinitialiser les filtres.</p>
+              <button
+                onClick={() => {
+                  setSearchQuery("");
+                  setSelectedCategory("Toutes catégories");
+                  setSelectedProvince("Toutes les provinces");
+                }}
+                className="mt-2 inline-flex items-center gap-1.5 rounded-xl bg-[#FAF7F2] border border-[#E8E1D5] px-4 py-2 text-xs font-bold text-[#C86D3B] hover:bg-[#EFE8DC] transition-colors"
+              >
+                Réinitialiser les filtres
+              </button>
             </div>
-            <h2 className="font-serif text-3xl font-extrabold text-[#1B4332]">
-              Les Artisans Certifiés de la RDC
-            </h2>
-            <p className="text-xs text-[#6B5E55]">
-              Chaque atelier partenaire est audité physiquement par les équipes SENDA pour garantir la transmission authentique des traditions.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* Artisan 1 */}
-            <div className="rounded-3xl border border-[#E8E1D5] bg-[#FAF7F2] p-5 space-y-4 hover:border-[#1B4332] hover:shadow-md transition-all flex flex-col justify-between">
-              <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <div className="relative h-12 w-12 rounded-2xl overflow-hidden border border-[#E8E1D5] bg-[#E8F0EC] shrink-0">
-                    <img src="/artworks/masque_pende.jpg" alt="Maître Mukendi" className="h-full w-full object-cover" />
-                  </div>
-                  <div>
-                    <h4 className="font-serif text-sm font-bold text-[#1B4332]">
-                      Maître Mukendi
-                    </h4>
-                    <span className="text-[11px] text-[#C86D3B] font-semibold flex items-center gap-1">
-                      <MapPin className="h-3 w-3" /> Gungu, Kwilu
-                    </span>
-                  </div>
-                </div>
-                <p className="text-xs text-[#6B5E55] leading-relaxed">
-                  Sculpteur sur wengé et spécialiste des masques rituels Pende depuis 28 ans.
-                </p>
-              </div>
-
-              <div className="pt-3 border-t border-[#E8E1D5] flex items-center justify-between text-xs">
-                <span className="text-[11px] font-bold text-[#16A34A] flex items-center gap-1">
-                  <CheckCircle2 className="h-3.5 w-3.5" /> Certifié SENDA
-                </span>
-                <button
-                  onClick={() => {
-                    setSearchQuery("Mukendi");
-                    const el = document.getElementById("catalogue");
-                    el?.scrollIntoView({ behavior: "smooth" });
-                  }}
-                  className="font-bold text-[#1B4332] hover:text-[#C86D3B] text-[11px] flex items-center gap-1 transition-colors"
-                >
-                  Voir œuvres →
-                </button>
-              </div>
-            </div>
-
-            {/* Artisan 2 */}
-            <div className="rounded-3xl border border-[#E8E1D5] bg-[#FAF7F2] p-5 space-y-4 hover:border-[#1B4332] hover:shadow-md transition-all flex flex-col justify-between">
-              <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <div className="relative h-12 w-12 rounded-2xl overflow-hidden border border-[#E8E1D5] bg-[#E8F0EC] shrink-0">
-                    <img src="/artworks/statuette_tshokwe.jpg" alt="Papa Tshimanga" className="h-full w-full object-cover" />
-                  </div>
-                  <div>
-                    <h4 className="font-serif text-sm font-bold text-[#1B4332]">
-                      Papa Tshimanga
-                    </h4>
-                    <span className="text-[11px] text-[#C86D3B] font-semibold flex items-center gap-1">
-                      <MapPin className="h-3 w-3" /> Tshikapa, Kasaï
-                    </span>
-                  </div>
-                </div>
-                <p className="text-xs text-[#6B5E55] leading-relaxed">
-                  Perpétue la statuaire royale Tshokwe et Lunda en bois précieux et patines rituelles.
-                </p>
-              </div>
-
-              <div className="pt-3 border-t border-[#E8E1D5] flex items-center justify-between text-xs">
-                <span className="text-[11px] font-bold text-[#16A34A] flex items-center gap-1">
-                  <CheckCircle2 className="h-3.5 w-3.5" /> Certifié SENDA
-                </span>
-                <button
-                  onClick={() => {
-                    setSearchQuery("Tshimanga");
-                    const el = document.getElementById("catalogue");
-                    el?.scrollIntoView({ behavior: "smooth" });
-                  }}
-                  className="font-bold text-[#1B4332] hover:text-[#C86D3B] text-[11px] flex items-center gap-1 transition-colors"
-                >
-                  Voir œuvres →
-                </button>
-              </div>
-            </div>
-
-            {/* Artisan 3 */}
-            <div className="rounded-3xl border border-[#E8E1D5] bg-[#FAF7F2] p-5 space-y-4 hover:border-[#1B4332] hover:shadow-md transition-all flex flex-col justify-between">
-              <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <div className="relative h-12 w-12 rounded-2xl overflow-hidden border border-[#E8E1D5] bg-[#E8F0EC] shrink-0">
-                    <img src="/artworks/textile_shoowa.jpg" alt="Coop. Maman Bikale" className="h-full w-full object-cover" />
-                  </div>
-                  <div>
-                    <h4 className="font-serif text-sm font-bold text-[#1B4332]">
-                      Coop. Maman Bikale
-                    </h4>
-                    <span className="text-[11px] text-[#C86D3B] font-semibold flex items-center gap-1">
-                      <MapPin className="h-3 w-3" /> Mweka, Kasaï
-                    </span>
-                  </div>
-                </div>
-                <p className="text-xs text-[#6B5E55] leading-relaxed">
-                  Collectif de 14 brodeuses du velours traditionnel Shoowa et tissage de raphia Kuba.
-                </p>
-              </div>
-
-              <div className="pt-3 border-t border-[#E8E1D5] flex items-center justify-between text-xs">
-                <span className="text-[11px] font-bold text-[#16A34A] flex items-center gap-1">
-                  <CheckCircle2 className="h-3.5 w-3.5" /> Certifié SENDA
-                </span>
-                <button
-                  onClick={() => {
-                    setSearchQuery("Bikale");
-                    const el = document.getElementById("catalogue");
-                    el?.scrollIntoView({ behavior: "smooth" });
-                  }}
-                  className="font-bold text-[#1B4332] hover:text-[#C86D3B] text-[11px] flex items-center gap-1 transition-colors"
-                >
-                  Voir œuvres →
-                </button>
-              </div>
-            </div>
-
-            {/* Artisan 4 */}
-            <div className="rounded-3xl border border-[#E8E1D5] bg-[#FAF7F2] p-5 space-y-4 hover:border-[#1B4332] hover:shadow-md transition-all flex flex-col justify-between">
-              <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <div className="relative h-12 w-12 rounded-2xl overflow-hidden border border-[#E8E1D5] bg-[#E8F0EC] shrink-0">
-                    <img src="/artworks/bijou_malachite.jpg" alt="Atelier Ilunga" className="h-full w-full object-cover" />
-                  </div>
-                  <div>
-                    <h4 className="font-serif text-sm font-bold text-[#1B4332]">
-                      Atelier Ilunga
-                    </h4>
-                    <span className="text-[11px] text-[#C86D3B] font-semibold flex items-center gap-1">
-                      <MapPin className="h-3 w-3" /> Lubumbashi, Katanga
-                    </span>
-                  </div>
-                </div>
-                <p className="text-xs text-[#6B5E55] leading-relaxed">
-                  Maîtres lapidaires taillant la malachite naturelle et orfèvres du cuivre martelé.
-                </p>
-              </div>
-
-              <div className="pt-3 border-t border-[#E8E1D5] flex items-center justify-between text-xs">
-                <span className="text-[11px] font-bold text-[#16A34A] flex items-center gap-1">
-                  <CheckCircle2 className="h-3.5 w-3.5" /> Certifié SENDA
-                </span>
-                <button
-                  onClick={() => {
-                    setSearchQuery("Ilunga");
-                    const el = document.getElementById("catalogue");
-                    el?.scrollIntoView({ behavior: "smooth" });
-                  }}
-                  className="font-bold text-[#1B4332] hover:text-[#C86D3B] text-[11px] flex items-center gap-1 transition-colors"
-                >
-                  Voir œuvres →
-                </button>
-              </div>
-            </div>
-          </div>
+          ) : (
+            filteredNFTs.map((nft) => (
+              <NFTCard key={nft.id} nft={nft} />
+            ))
+          )}
         </div>
       </section>
-
-      {/* 5. Explainer / Escrow Workflow Section */}
-      <section className="py-16 bg-[#E8F0EC]/60 border-b border-[#C1DBCF]">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-12 space-y-2">
-            <span className="text-xs font-bold text-[#1B4332] uppercase tracking-wider">
-              Cycle de Vente Sécurisé
-            </span>
-            <h2 className="font-serif text-3xl font-extrabold text-[#1B4332]">
-              Le Séquestre Physique SENDA en 4 Étapes
-            </h2>
-            <p className="text-xs text-[#4A3B33]">
-              Garantie technologique protégeant l&apos;artisan congolais contre les impayés et l&apos;acheteur contre les colis non reçus.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            {/* Step 1 */}
-            <div className="rounded-2xl bg-white p-6 border border-[#C1DBCF] shadow-sm space-y-3">
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#1B4332] text-[#E9C46A] font-serif font-bold text-sm">
-                1
-              </span>
-              <h4 className="font-serif font-bold text-[#1B4332] text-sm">Dépôt sous Séquestre</h4>
-              <p className="text-xs text-[#6B5E55] leading-relaxed">
-                L&apos;acheteur consigne les jetons STT dans le smart contract <code className="text-[#1B4332] font-semibold">SendaEscrow</code>. L&apos;état passe à <strong className="text-[#D97706]">Funded</strong>.
-              </p>
-            </div>
-
-            {/* Step 2 */}
-            <div className="rounded-2xl bg-white p-6 border border-[#C1DBCF] shadow-sm space-y-3">
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#1B4332] text-[#E9C46A] font-serif font-bold text-sm">
-                2
-              </span>
-              <h4 className="font-serif font-bold text-[#1B4332] text-sm">Expédition en RDC</h4>
-              <p className="text-xs text-[#6B5E55] leading-relaxed">
-                L&apos;artisan, garanti du paiement bloqué, prépare l&apos;emballage sécurisé avec son certificat d&apos;authenticité et expédie le colis.
-              </p>
-            </div>
-
-            {/* Step 3 */}
-            <div className="rounded-2xl bg-white p-6 border border-[#C1DBCF] shadow-sm space-y-3">
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#1B4332] text-[#E9C46A] font-serif font-bold text-sm">
-                3
-              </span>
-              <h4 className="font-serif font-bold text-[#1B4332] text-sm">Réception Matérielle</h4>
-              <p className="text-xs text-[#6B5E55] leading-relaxed">
-                L&apos;acheteur réceptionne la pièce d&apos;art, contrôle sa conformité physique par rapport aux métadonnées immuables IPFS.
-              </p>
-            </div>
-
-            {/* Step 4 */}
-            <div className="rounded-2xl bg-white p-6 border border-[#C1DBCF] shadow-sm space-y-3">
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#16A34A] text-white font-serif font-bold text-sm">
-                4
-              </span>
-              <h4 className="font-serif font-bold text-[#1B4332] text-sm">Libération des Fonds</h4>
-              <p className="text-xs text-[#6B5E55] leading-relaxed">
-                L&apos;acheteur valide la réception. Le contrat intelligent transfère irrévocablement les jetons vers le portefeuille de l&apos;artisan.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Escrow Modal */}
-      <BuyModal
-        nft={selectedNFTForBuy}
-        isOpen={isBuyModalOpen}
-        onClose={() => setIsBuyModalOpen(false)}
-      />
     </div>
   );
 }
