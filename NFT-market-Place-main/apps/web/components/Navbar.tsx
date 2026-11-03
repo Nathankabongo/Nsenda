@@ -252,7 +252,7 @@ export function Navbar() {
 
               {/* Dropdown Menu Profil */}
               {userDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-64 rounded-2xl border border-[#E8E1D5] bg-white p-3 shadow-xl space-y-2 z-50 animate-in fade-in zoom-in-95">
+                <div className="absolute right-0 mt-2 w-64 origin-top-right rounded-2xl border border-[#E8E1D5] bg-white p-3 shadow-xl space-y-2 z-50 animate-in fade-in zoom-in-95 duration-150 ease-emil-out motion-reduce:animate-none">
                   <div className="border-b border-[#EAE3D6] pb-2">
                     <p className="text-xs font-bold text-[#1B4332]">{user.displayName || "Utilisateur"}</p>
                     <p className="text-[10px] text-[#8C7A6B] truncate">{user.email || ""}</p>
@@ -275,7 +275,7 @@ export function Navbar() {
                   <button
                     type="button"
                     onClick={handleUserLogout}
-                    className="w-full flex items-center gap-2 rounded-xl px-2.5 py-1.5 text-xs text-red-600 font-semibold hover:bg-red-50 transition-colors"
+                    className="w-full flex items-center gap-2 rounded-xl px-2.5 py-1.5 text-xs text-red-600 font-semibold hover:bg-red-50 active:scale-95 transition-colors duration-micro"
                   >
                     <LogOut className="h-3.5 w-3.5" />
                     <span>Déconnexion</span>
@@ -288,13 +288,13 @@ export function Navbar() {
             <div className="flex items-center gap-2">
               <Link
                 href="/login"
-                className="rounded-full px-3.5 py-1.5 text-xs font-bold text-[#1B4332] hover:bg-[#FAF8F5] transition-all"
+                className="rounded-full px-3.5 py-1.5 text-xs font-bold text-[#1B4332] hover:bg-[#FAF8F5] active:scale-95 transition-colors duration-150"
               >
                 Connexion
               </Link>
               <Link
                 href="/register"
-                className="rounded-full bg-[#1B4332] px-4 py-1.5 text-xs font-bold text-[#E9C46A] hover:bg-[#143427] shadow-xs transition-all"
+                className="rounded-full bg-[#1B4332] px-4 py-1.5 text-xs font-bold text-[#E9C46A] hover:bg-[#143427] active:scale-95 shadow-xs transition-colors duration-150"
               >
                 Inscription
               </Link>

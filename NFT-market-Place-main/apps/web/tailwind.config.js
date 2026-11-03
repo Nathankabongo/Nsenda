@@ -79,6 +79,14 @@ module.exports = {
         "2xl": "1rem",
         "3xl": "1.5rem",
       },
+      transitionTimingFunction: {
+        "emil-out": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "emil-in-out": "cubic-bezier(0.65, 0, 0.35, 1)",
+      },
+      transitionDuration: {
+        micro: "120ms",
+        ui: "200ms",
+      },
     },
   },
   plugins: [],

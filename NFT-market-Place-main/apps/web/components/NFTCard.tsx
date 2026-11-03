@@ -19,7 +19,7 @@ export function NFTCard({ nft, onBuy }: NFTCardProps) {
   const [imgSrc, setImgSrc] = useState(nft.image);
 
   return (
-    <div className="senda-card group relative flex flex-col overflow-hidden rounded-2xl bg-white border border-[#EAE3D6] shadow-sm transition-all duration-300 hover:shadow-xl hover:border-[#C86D3B] hover:-translate-y-1">
+    <div className="senda-card group relative flex flex-col overflow-hidden rounded-2xl bg-white border border-[#EAE3D6] shadow-sm transition-transform transition-shadow duration-ui ease-emil-out hover:shadow-xl hover:border-[#C86D3B] hover:-translate-y-1 motion-reduce:transition-none">
       {/* 1. Cadre Image avec ratio compact et équilibré pour un affichage complet */}
       <div className="relative h-44 sm:h-48 w-full overflow-hidden bg-gradient-to-b from-[#FAF8F5] via-[#F4EFE6] to-[#EAE3D6] border-b border-[#EAE3D6] flex items-center justify-center p-3">
         <Link href={`/nft/${nft.tokenId}`} className="relative flex h-full w-full items-center justify-center">
@@ -27,7 +27,7 @@ export function NFTCard({ nft, onBuy }: NFTCardProps) {
             src={imgSrc}
             alt={nft.name}
             onError={() => setImgSrc("/artworks/masque_pende.jpg")}
-            className="h-full w-full object-contain drop-shadow-md transition-transform duration-500 group-hover:scale-105"
+            className="h-full w-full object-contain drop-shadow-md transition-transform duration-ui ease-out group-hover:scale-[1.03] motion-reduce:transform-none"
             loading="lazy"
           />
         </Link>
@@ -117,7 +117,7 @@ export function NFTCard({ nft, onBuy }: NFTCardProps) {
             {user?.role === "BUYER" ? (
               <button
                 onClick={() => onBuy && onBuy(nft)}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-[#1B4332] hover:bg-[#143728] px-3.5 py-2 text-xs font-bold text-white shadow-xs transition-all hover:scale-102"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-[#1B4332] hover:bg-[#143728] active:scale-[0.96] px-3.5 py-2 text-xs font-bold text-white shadow-xs transition-transform duration-micro ease-out"
               >
                 <Lock className="h-3.5 w-3.5 text-[#E9C46A]" />
                 <span>Acheter</span>
@@ -125,14 +125,14 @@ export function NFTCard({ nft, onBuy }: NFTCardProps) {
             ) : !user ? (
               <Link
                 href="/login"
-                className="inline-flex items-center gap-1.5 rounded-xl bg-[#1B4332] hover:bg-[#143728] px-3 py-1.5 text-xs font-bold text-[#E9C46A] shadow-xs transition-colors"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-[#1B4332] hover:bg-[#143728] active:scale-[0.96] px-3 py-1.5 text-xs font-bold text-[#E9C46A] shadow-xs transition-transform duration-micro ease-out"
               >
                 <span>Commander</span>
               </Link>
             ) : (
               <Link
                 href={`/nft/${nft.tokenId}`}
-                className="inline-flex items-center gap-1 rounded-xl bg-[#FAF7F2] hover:bg-[#EFE8DC] border border-[#E8E1D5] px-3 py-1.5 text-xs font-bold text-[#1B4332] transition-colors"
+                className="inline-flex items-center gap-1 rounded-xl bg-[#FAF7F2] hover:bg-[#EFE8DC] active:scale-[0.96] border border-[#E8E1D5] px-3 py-1.5 text-xs font-bold text-[#1B4332] transition-transform duration-micro ease-out"
               >
                 <span>Détails</span>
               </Link>

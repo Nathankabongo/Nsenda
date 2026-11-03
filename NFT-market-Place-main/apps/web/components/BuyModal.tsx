@@ -86,8 +86,8 @@ export function BuyModal({ nft, isOpen, onClose, onSuccess }: BuyModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#081C15]/70 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-lg overflow-hidden rounded-3xl border border-[#EAE3D6] bg-white shadow-2xl p-7 text-[#2D231E]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#081C15]/75 backdrop-blur-sm animate-in fade-in duration-150 motion-reduce:animate-none">
+      <div className="relative w-full max-w-lg overflow-hidden rounded-3xl border border-[#EAE3D6] bg-white shadow-2xl p-7 text-[#2D231E] animate-in zoom-in-[0.97] slide-in-from-bottom-2 duration-ui ease-emil-out motion-reduce:animate-none">
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-[#EAE3D6]">
           <div className="flex items-center gap-2.5">
@@ -105,7 +105,7 @@ export function BuyModal({ nft, isOpen, onClose, onSuccess }: BuyModalProps) {
           </div>
           <button
             onClick={onClose}
-            className="rounded-xl p-1.5 text-[#6B5E55] hover:bg-[#F8F5F0] hover:text-[#2D231E] transition-colors"
+            className="rounded-xl p-1.5 text-[#6B5E55] hover:bg-[#F8F5F0] hover:text-[#2D231E] active:scale-95 transition-transform duration-micro"
           >
             <X className="h-5 w-5" />
           </button>
@@ -152,7 +152,7 @@ export function BuyModal({ nft, isOpen, onClose, onSuccess }: BuyModalProps) {
 
             <button
               onClick={onClose}
-              className="w-full rounded-xl bg-[#1B4332] hover:bg-[#143728] py-3 text-sm font-bold text-white transition-all shadow-sm"
+              className="w-full rounded-xl bg-[#1B4332] hover:bg-[#143728] active:scale-[0.98] py-3 text-sm font-bold text-white transition-transform duration-micro ease-out shadow-sm"
             >
               Fermer et suivre la commande
             </button>
@@ -230,7 +230,7 @@ export function BuyModal({ nft, isOpen, onClose, onSuccess }: BuyModalProps) {
               <button
                 onClick={handleEscrowDeposit}
                 disabled={step === "approving" || step === "depositing"}
-                className="w-full rounded-xl bg-[#1B4332] hover:bg-[#143728] py-3.5 text-sm font-bold text-white transition-all shadow-md flex items-center justify-center gap-2 disabled:opacity-50"
+                className="w-full rounded-xl bg-[#1B4332] hover:bg-[#143728] active:scale-[0.98] py-3.5 text-sm font-bold text-white transition-transform duration-micro ease-out shadow-md flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 {step === "approving" ? (
                   <>
