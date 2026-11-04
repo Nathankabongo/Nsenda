@@ -63,7 +63,9 @@ export default function AdminPage() {
   const [rationale, setRationale] = useState("");
   const [actionInProgress, setActionInProgress] = useState(false);
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
+  const RAW_API_URL = process.env.NEXT_PUBLIC_API_URL || "https://nsenda-1.onrender.com";
+  const CLEAN_API_URL = RAW_API_URL.replace(/\/+$/, "").replace(/\/api$/, "");
+  const API_URL = `${CLEAN_API_URL}/api`;
 
   useEffect(() => {
     if (user?.role === "ADMIN" && token) {

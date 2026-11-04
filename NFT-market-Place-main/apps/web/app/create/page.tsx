@@ -114,7 +114,9 @@ export default function CreateNFTPage() {
       toast.loading("1/2 Téléversement décentralisé des métadonnées vers IPFS...", { id: "pub-tx" });
 
       let metadataURI = "";
-      const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
+      const RAW_API_URL = process.env.NEXT_PUBLIC_API_URL || "https://nsenda-1.onrender.com";
+      const CLEAN_API_URL = RAW_API_URL.replace(/\/+$/, "").replace(/\/api$/, "");
+      const API_BASE_URL = `${CLEAN_API_URL}/api`;
 
       try {
         const formData = new FormData();

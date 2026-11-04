@@ -1,7 +1,9 @@
 import { INITIAL_DEMO_NFTS, NFTItem } from "./mockData";
 import { DEFAULT_CONTRACTS } from "./contracts/abis";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
+const RAW_API_URL = process.env.NEXT_PUBLIC_API_URL || "https://nsenda-1.onrender.com";
+const CLEAN_API_URL = RAW_API_URL.replace(/\/+$/, "").replace(/\/api$/, "");
+const API_BASE_URL = `${CLEAN_API_URL}/api`;
 
 export interface CreateOrderParams {
   artworkId: string;

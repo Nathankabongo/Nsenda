@@ -43,7 +43,9 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
+const RAW_API_URL = process.env.NEXT_PUBLIC_API_URL || "https://nsenda-1.onrender.com";
+const CLEAN_API_URL = RAW_API_URL.replace(/\/+$/, "").replace(/\/api$/, "");
+const API_URL = `${CLEAN_API_URL}/api`;
 
 // Répertoire des comptes prédéfinis pour le jury académique UNIKIN
 const DEMO_ACCOUNTS: Record<string, { password: string; user: User }> = {
