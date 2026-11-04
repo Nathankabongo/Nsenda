@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Lock, MapPin, CheckCircle2 } from "lucide-react";
+import { useAccount } from "wagmi";
 import { toast } from "sonner";
 import { NFTItem } from "@/lib/mockData";
 import { useAuth } from "@/context/AuthContext";
@@ -18,6 +19,7 @@ interface NFTCardProps {
 
 export function NFTCard({ nft, onBuy }: NFTCardProps) {
   const { user } = useAuth();
+  const { isConnected } = useAccount();
   const router = useRouter();
   const [imgSrc, setImgSrc] = useState(nft.image);
 
@@ -45,14 +47,11 @@ export function NFTCard({ nft, onBuy }: NFTCardProps) {
           />
         </Link>
 
-        {/* Badge Haut-Gauche : Province et mention Démo sobre */}
+        {/* Badge Haut-Gauche : Province */}
         <div className="absolute left-2.5 top-2.5 pointer-events-none z-10 flex items-center gap-1.5">
           <span className="inline-flex items-center gap-1 rounded-md bg-[#1B4332]/90 backdrop-blur-sm px-2 py-0.5 text-[10px] font-medium text-white border border-[#2D6A4F]/40 shadow-xs">
             <MapPin className="h-2.5 w-2.5 text-[#E9C46A] shrink-0" />
             <span>{nft.artisanProvince}</span>
-          </span>
-          <span className="rounded-md bg-white/95 backdrop-blur-sm border border-[#E8E1D5] px-1.5 py-0.5 text-[9px] font-medium text-[#6B5E55] shadow-xs">
-            Démo
           </span>
         </div>
 
@@ -130,7 +129,7 @@ export function NFTCard({ nft, onBuy }: NFTCardProps) {
           </div>
 
           <div className="shrink-0">
-            {user?.role === "BUYER" ? (
+            {user?.role === "BUYER" && isConnected ? (
               <button
                 type="button"
                 onClick={() => onBuy && onBuy(nft)}
@@ -139,14 +138,10 @@ export function NFTCard({ nft, onBuy }: NFTCardProps) {
                 <Lock className="h-3.5 w-3.5 text-[#E9C46A]" />
                 <span>Acheter</span>
               </button>
-            ) : !user ? (
-              <button
-                type="button"
-                onClick={handleVisitorOrder}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-[#1B4332] bg-[#1B4332] hover:bg-[#143728] active:scale-[0.98] px-3 py-1.5 text-xs font-medium text-[#E9C46A] shadow-xs transition-colors duration-micro"
-              >
-                <span>Commander</span>
-              </button>
+            ) : user?.role === "BUYER" && !isConnected ? (
+              <span className="text-[10px] text-[#8C7A6B] font-medium bg-[#FAF7F2] px-2.5 py-1.5 rounded-lg border border-[#E8E1D5]">
+                Connectez votre wallet
+              </span>
             ) : (
               <Link
                 href={`/nft/${nft.tokenId}`}

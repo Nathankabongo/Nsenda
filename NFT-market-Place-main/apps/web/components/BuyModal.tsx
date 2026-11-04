@@ -284,7 +284,7 @@ export function BuyModal({ nft, isOpen, onClose, onSuccess }: BuyModalProps) {
               </div>
               <div className="flex justify-between text-emerald-700">
                 <span>Frais de séquestre et gas</span>
-                <span className="font-medium">Pris en charge (Testnet)</span>
+                <span className="font-medium">Inclus</span>
               </div>
               <div className="flex justify-between border-t border-[#EAE3D6] pt-2 text-xs font-bold text-[#1B4332]">
                 <span>Total à consigner</span>
@@ -329,7 +329,7 @@ export function BuyModal({ nft, isOpen, onClose, onSuccess }: BuyModalProps) {
             )}
 
             <p className="text-center text-[10px] text-[#6B5E55]">
-              Réseau : <strong>Polygon Amoy</strong> • Aucun fonds réel n&apos;est engagé
+              Réseau : <strong>Polygon Amoy</strong> • Paiement sécurisé sous séquestre STT
             </p>
           </div>
         )}

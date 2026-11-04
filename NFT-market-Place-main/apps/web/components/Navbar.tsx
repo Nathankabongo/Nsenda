@@ -4,11 +4,12 @@ import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { useAccount, useDisconnect, useReadContract } from "wagmi";
+import { useAccount, useDisconnect, useReadContract, useSwitchChain, useSignMessage } from "wagmi";
 import { formatEther } from "viem";
 import { useAuth } from "@/context/AuthContext";
 import { formatAddress } from "@/lib/utils";
 import { DEFAULT_CONTRACTS, SENDA_TOKEN_ABI } from "@/lib/contracts/abis";
+import { toast } from "sonner";
 import {
   Compass,
   PlusCircle,
@@ -31,6 +32,7 @@ import {
   Wallet,
   AlertCircle,
   CheckCircle2,
+  Coins,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -46,9 +48,59 @@ export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
 
-  const { user, logout } = useAuth();
-  const { address, isConnected } = useAccount();
+  const { user, logout, linkWallet } = useAuth();
+  const { address, isConnected, connector, chain, chainId } = useAccount();
   const { disconnect } = useDisconnect();
+  const { switchChainAsync } = useSwitchChain();
+  const { signMessageAsync } = useSignMessage();
+  const [isLinkingWallet, setIsLinkingWallet] = useState(false);
+
+  const handleLinkWallet = async () => {
+    if (!address) return;
+    setIsLinkingWallet(true);
+    try {
+      await linkWallet(address, signMessageAsync);
+    } finally {
+      setIsLinkingWallet(false);
+    }
+  };
+
+  const handleSwitchToAmoy = async () => {
+    try {
+      if (typeof window !== "undefined" && (window as any).ethereum) {
+        try {
+          await (window as any).ethereum.request({
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: "0x13882" }],
+          });
+          toast.success("Réseau basculé sur Polygon Amoy !");
+        } catch (switchError: any) {
+          if (switchError.code === 4902 || switchError?.message?.includes("4902")) {
+            await (window as any).ethereum.request({
+              method: "wallet_addEthereumChain",
+              params: [
+                {
+                  chainId: "0x13882",
+                  chainName: "Polygon Amoy Testnet",
+                  rpcUrls: ["https://rpc-amoy.polygon.technology/"],
+                  nativeCurrency: { name: "MATIC", symbol: "POL", decimals: 18 },
+                  blockExplorerUrls: ["https://amoy.polygonscan.com/"],
+                },
+              ],
+            });
+            toast.success("Réseau Polygon Amoy ajouté et activé !");
+          } else {
+            throw switchError;
+          }
+        }
+      } else if (switchChainAsync) {
+        await switchChainAsync({ chainId: 80002 });
+        toast.success("Réseau basculé sur Polygon Amoy !");
+      }
+    } catch (err: any) {
+      toast.error("Impossible de basculer sur Polygon Amoy : " + (err.message || "erreur réseau"));
+    }
+  };
 
   // Lecture du solde STT on-chain
   const { data: rawBalance } = useReadContract({
@@ -86,6 +138,7 @@ export function Navbar() {
       case "ARTISAN":
         return [
           { name: "Tableau de bord", href: "/", icon: LayoutDashboard },
+          { name: "Mon portefeuille", href: "/wallet", icon: Wallet },
           { name: "Mes œuvres", href: "/my-nfts?tab=artisan", icon: Palette },
           { name: "Ajouter une œuvre", href: "/create", icon: PlusCircle },
           { name: "Mes ventes", href: "/my-nfts?tab=orders", icon: PackageCheck },
@@ -96,7 +149,7 @@ export function Navbar() {
           { name: "Accueil", href: "/", icon: Home },
           { name: "Catalogue", href: "/#catalogue", icon: Compass },
           { name: "Mes achats", href: "/my-nfts?tab=orders", icon: ShoppingBag },
-          { name: "Favoris", href: "/#favoris", icon: Heart },
+          { name: "Politique STT", href: "/politique-stt", icon: Coins },
         ];
 
       case "ADMIN":
@@ -190,80 +243,61 @@ export function Navbar() {
 
         {/* 3. Section Portefeuille & Authentification */}
         <div className="flex items-center gap-2 sm:gap-2.5">
-          {/* Bouton Portefeuille : Visible pour tous (visiteurs et connectés) */}
-          <ConnectButton.Custom>
-            {({
-              account,
-              chain,
-              openAccountModal,
-              openChainModal,
-              openConnectModal,
-              authenticationStatus,
-              mounted,
-            }) => {
-              const ready = mounted && authenticationStatus !== "loading";
-              const connected =
-                ready &&
-                account &&
-                chain &&
-                (!authenticationStatus || authenticationStatus === "authenticated");
-
-              if (!connected) {
-                return (
-                  <button
-                    onClick={openConnectModal}
-                    type="button"
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-[#1B4332] bg-[#1B4332] px-2.5 py-1.5 sm:px-3 text-xs font-medium text-white transition-colors duration-micro hover:bg-[#143427] active:scale-[0.98]"
-                  >
-                    <Wallet className="h-3.5 w-3.5 text-[#E9C46A]" />
-                    <span className="hidden sm:inline">Connecter le portefeuille</span>
-                    <span className="sm:hidden">Portefeuille</span>
-                  </button>
-                );
-              }
-
-              // Détection du réseau requis : Polygon Amoy (80002)
-              if (chain.unsupported || chain.id !== 80002) {
-                return (
-                  <button
-                    onClick={openChainModal}
-                    type="button"
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-amber-300 bg-amber-50 px-2.5 py-1.5 text-xs font-medium text-amber-900 transition-colors duration-micro hover:bg-amber-100 active:scale-[0.98]"
-                    title="Le réseau actif n'est pas Polygon Amoy (80002). Cliquez pour changer."
-                  >
-                    <AlertCircle className="h-3.5 w-3.5 text-amber-700 shrink-0" />
-                    <span>Mauvais réseau</span>
-                  </button>
-                );
-              }
-
-              return (
-                <div className="flex items-center gap-1 sm:gap-1.5">
-                  <button
-                    onClick={openChainModal}
-                    type="button"
-                    className="hidden lg:inline-flex items-center gap-1.5 rounded-lg border border-[#E8E1D5] bg-white px-2 py-1 text-xs font-medium text-[#4A3B33] hover:border-[#1B4332] transition-colors duration-micro"
-                    title="Réseau connecté. Cliquez pour changer."
-                  >
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
-                    <span className="truncate max-w-[90px]">{chain.name}</span>
-                  </button>
-
-                  <button
-                    onClick={openAccountModal}
-                    type="button"
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-[#E8E1D5] bg-white px-2.5 py-1 text-xs font-mono font-medium text-[#1B4332] hover:border-[#1B4332] transition-colors duration-micro"
-                    title="Consulter le solde STT et les détails du compte"
-                  >
-                    <span className="font-sans font-semibold text-[#C86D3B] hidden md:inline border-r border-[#E8E1D5] pr-1.5">
+          {/* Le bouton Portefeuille n'apparaît JAMAIS pour un visiteur non connecté */}
+          {user && (
+            <>
+              {!isConnected ? (
+                /* Utilisateur connecté mais portefeuille non connecté : Bouton "Connecter le portefeuille" */
+                <ConnectButton.Custom>
+                  {({ openConnectModal }) => (
+                    <button
+                      onClick={openConnectModal}
+                      type="button"
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-[#1B4332] bg-[#1B4332] px-2.5 py-1.5 sm:px-3 text-xs font-medium text-white transition-colors duration-micro hover:bg-[#143427] active:scale-[0.98]"
+                    >
+                      <Wallet className="h-3.5 w-3.5 text-[#E9C46A]" />
+                      <span className="hidden sm:inline">Connecter le portefeuille</span>
+                      <span className="sm:hidden">Portefeuille</span>
+                    </button>
+                  )}
+                </ConnectButton.Custom>
+              ) : chainId !== 80002 && chain?.id !== 80002 ? (
+                /* Réseau != Polygon Amoy : Bouton "Passer sur Polygon Amoy" */
+                <button
+                  onClick={handleSwitchToAmoy}
+                  type="button"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-amber-400 bg-amber-500 hover:bg-amber-600 px-2.5 py-1.5 text-xs font-semibold text-white shadow-xs transition-colors duration-micro active:scale-[0.98]"
+                  title="Le réseau actif n'est pas Polygon Amoy (80002). Cliquez pour changer."
+                >
+                  <AlertCircle className="h-3.5 w-3.5 text-white shrink-0 animate-pulse" />
+                  <span>Passer sur Polygon Amoy</span>
+                </button>
+              ) : (
+                /* Portefeuille connecté sur Polygon Amoy : Le bouton disparaît, affichage état connecté */
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <div className="inline-flex items-center gap-1.5 rounded-lg border border-[#E8E1D5] bg-white px-2.5 py-1 text-xs font-medium text-[#1B4332] shadow-2xs">
+                    <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="hidden xl:inline text-[#6B5E55]">Portefeuille connecté :</span>
+                    <span className="font-semibold text-[#1B4332]">{connector?.name || "MetaMask"}</span>
+                    <span className="font-mono text-[#8C7A6B]">({formatAddress(address)})</span>
+                    <span className="border-l border-[#E8E1D5] pl-1.5 font-bold text-[#C86D3B]">
                       {sttBalanceFormatted} STT
                     </span>
-                    <span>{account.displayName}</span>
+                  </div>
+
+                  <button
+                    onClick={() => disconnect()}
+                    type="button"
+                    className="inline-flex items-center gap-1 rounded-lg border border-[#E8E1D5] bg-white hover:bg-red-50 hover:border-red-200 hover:text-red-600 px-2 py-1 text-[11px] font-medium text-[#6B5E55] transition-colors duration-micro"
+                    title="Déconnecter le portefeuille"
+                  >
+                    <LogOut className="h-3 w-3" />
+                    <span className="hidden sm:inline">Déconnecter</span>
                   </button>
                 </div>
-              );
-            }}
-          </ConnectButton.Custom>
+              )}
+            </>
+          )}
 
           {/* Section Profil Utilisateur */}
           {user ? (
@@ -299,9 +333,29 @@ export function Navbar() {
                   </div>
 
                   {address && (
-                    <div className="flex items-center gap-1.5 text-[10px] text-emerald-800 bg-emerald-50 p-2 rounded-lg border border-emerald-200">
-                      <CheckCircle2 className="h-3 w-3 shrink-0" />
-                      <span className="truncate font-mono">{formatAddress(address)}</span>
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-[10px] text-emerald-800 bg-emerald-50 p-2 rounded-lg border border-emerald-200">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <CheckCircle2 className="h-3 w-3 shrink-0 text-emerald-600" />
+                          <span className="truncate font-mono">{formatAddress(address)}</span>
+                        </div>
+                        {user.walletAddress?.toLowerCase() === address.toLowerCase() ? (
+                          <span className="text-[9px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">
+                            Lié
+                          </span>
+                        ) : null}
+                      </div>
+
+                      {user.walletAddress?.toLowerCase() !== address.toLowerCase() && (
+                        <button
+                          type="button"
+                          onClick={handleLinkWallet}
+                          disabled={isLinkingWallet}
+                          className="w-full text-center py-1.5 px-2 rounded-lg bg-[#C86D3B] text-white text-[10px] font-bold hover:bg-[#b05d30] transition-colors"
+                        >
+                          {isLinkingWallet ? "Signature en cours..." : "Lier ce portefeuille à mon compte"}
+                        </button>
+                      )}
                     </div>
                   )}
 

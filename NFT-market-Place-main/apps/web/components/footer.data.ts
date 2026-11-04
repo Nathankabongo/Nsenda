@@ -172,6 +172,10 @@ export const FOOTER_CONFIG: FooterConfiguration = {
           href: "/terms#tracabilite",
         },
         {
+          label: "Politique d’attribution STT",
+          href: "/politique-stt",
+        },
+        {
           label: "Politique de redevances",
           href: "/terms#redevances",
         },

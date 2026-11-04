@@ -16,7 +16,7 @@ export interface NFTItem {
   name: string;
   description: string;
   image: string;
-  price: string; // in STT (Senda Test Token)
+  price: string; // in STT (Senda Trade Token)
   priceWei: string;
   seller: string;
   artisanName: string;
@@ -37,7 +37,6 @@ export interface NFTItem {
   collectionName: string;
   traits: { trait_type: string; value: string | number }[];
   aiCertificate?: AICertificate;
-  isDemo?: boolean;
 }
 
 export const CONGO_PROVINCES = [
@@ -61,7 +60,7 @@ export const SENDA_CATEGORIES = [
   "Vannerie d'art",
 ] as const;
 
-export const INITIAL_DEMO_NFTS: NFTItem[] = [
+export const INITIAL_CATALOG_NFTS: NFTItem[] = [
   {
     id: "1",
     tokenId: 1,

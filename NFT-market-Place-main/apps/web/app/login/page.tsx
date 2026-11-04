@@ -27,9 +27,9 @@ export default function LoginPage() {
     }
   };
 
-  const handleQuickLogin = (demoEmail: string, demoPass: string) => {
-    setEmail(demoEmail);
-    setPassword(demoPass);
+  const handleQuickLogin = (targetEmail: string, targetPass: string) => {
+    setEmail(targetEmail);
+    setPassword(targetPass);
   };
 
   return (
@@ -48,11 +48,11 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* Boutons de démonstration rapide pour le jury académique */}
+        {/* Accès rapide aux comptes de test */}
         <div className="rounded-2xl border border-[#EAE3D6] bg-[#FAF8F5] p-3.5 space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-bold uppercase tracking-wider text-[#8C7A6B]">
-              Comptes de test (Jury UNIKIN)
+              Comptes préconfigurés
             </span>
             <span className="text-[10px] text-[#C86D3B] font-semibold">1-clic pré-remplissage</span>
           </div>

@@ -30,7 +30,7 @@ import {
 import { NFTCard } from "@/components/NFTCard";
 import { BuyModal } from "@/components/BuyModal";
 import {
-  INITIAL_DEMO_NFTS,
+  INITIAL_CATALOG_NFTS,
   NFTItem,
   CONGO_PROVINCES,
   SENDA_CATEGORIES,
@@ -44,7 +44,7 @@ export default function HomePage() {
   const { user } = useAuth();
   const { isConnected, address } = useAccount();
 
-  const [artworks, setArtworks] = useState<NFTItem[]>(INITIAL_DEMO_NFTS);
+  const [artworks, setArtworks] = useState<NFTItem[]>(INITIAL_CATALOG_NFTS);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("Toutes catégories");
   const [selectedProvince, setSelectedProvince] = useState<string>("Toutes les provinces");

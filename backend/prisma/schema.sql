@@ -40,7 +40,10 @@ END $$;
 -- Table des Utilisateurs & Maîtres Artisans
 CREATE TABLE IF NOT EXISTS "users" (
     "id" TEXT NOT NULL,
-    "wallet_address" TEXT NOT NULL,
+    "email" TEXT UNIQUE,
+    "password_hash" TEXT,
+    "wallet_address" TEXT UNIQUE,
+    "active_nonce" TEXT,
     "display_name" TEXT,
     "role" "Role" NOT NULL DEFAULT 'BUYER',
     "verification_status" "VerificationStatus" NOT NULL DEFAULT 'UNVERIFIED',
@@ -170,6 +173,25 @@ END $$;
 
 DO $$ BEGIN
     ALTER TABLE "escrow_records" ADD CONSTRAINT "escrow_records_order_id_fkey" FOREIGN KEY ("order_id") REFERENCES "orders"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+-- Table des dotations et recharges STT
+CREATE TABLE IF NOT EXISTS "stt_grants" (
+    "id" TEXT NOT NULL,
+    "user_id" TEXT NOT NULL,
+    "wallet_address" TEXT NOT NULL,
+    "amount" DECIMAL(18,4) NOT NULL,
+    "grant_type" TEXT NOT NULL,
+    "tx_hash" TEXT,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "stt_grants_pkey" PRIMARY KEY ("id")
+);
+
+DO $$ BEGIN
+    ALTER TABLE "stt_grants" ADD CONSTRAINT "stt_grants_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 EXCEPTION
     WHEN duplicate_object THEN null;
 END $$;

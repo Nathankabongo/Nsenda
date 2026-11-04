@@ -1,4 +1,4 @@
-import { INITIAL_DEMO_NFTS, NFTItem } from "./mockData";
+import { INITIAL_CATALOG_NFTS, NFTItem } from "./mockData";
 import { DEFAULT_CONTRACTS } from "./contracts/abis";
 
 const RAW_API_URL = process.env.NEXT_PUBLIC_API_URL || "https://nsenda-1.onrender.com";
@@ -31,7 +31,7 @@ export interface CreateOrderResult {
  * Adaptateur universel convertissant un objet brut d'API ou d'état en un NFTItem conforme
  */
 export function mapToNFTItem(raw: any): NFTItem {
-  const localMatch = INITIAL_DEMO_NFTS.find(
+  const localMatch = INITIAL_CATALOG_NFTS.find(
     (n) => n.id === raw.id || n.tokenId === Number(raw.tokenId)
   );
 
@@ -118,10 +118,10 @@ export async function getArtworks(params?: {
         return itemsList.map(mapToNFTItem);
       }
     }
-    return INITIAL_DEMO_NFTS;
+    return INITIAL_CATALOG_NFTS;
   } catch {
     // Fallback gracieux sur les données authentifiées locales
-    return INITIAL_DEMO_NFTS;
+    return INITIAL_CATALOG_NFTS;
   }
 }
 
@@ -141,7 +141,7 @@ export async function getArtworkById(id: string): Promise<NFTItem | null> {
     // ignore
   }
 
-  const found = INITIAL_DEMO_NFTS.find(
+  const found = INITIAL_CATALOG_NFTS.find(
     (item) => item.id === id || item.tokenId.toString() === id
   );
   return found || null;

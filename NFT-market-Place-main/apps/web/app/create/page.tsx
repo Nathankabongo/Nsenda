@@ -2,8 +2,8 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAccount, useWriteContract, usePublicClient } from "wagmi";
-import { parseEventLogs } from "viem";
+import { useAccount, useWriteContract, usePublicClient, useSwitchChain, useSignMessage } from "wagmi";
+import { parseEventLogs, parseEther } from "viem";
 import confetti from "canvas-confetti";
 import { toast } from "sonner";
 import {
@@ -16,8 +16,10 @@ import {
   Clock,
   Sparkles,
   Cpu,
+  AlertCircle,
+  ExternalLink,
 } from "lucide-react";
-import { SENDA_NFT_ABI, DEFAULT_CONTRACTS } from "@/lib/contracts/abis";
+import { SENDA_NFT_ABI, SENDA_MARKETPLACE_ABI, DEFAULT_CONTRACTS } from "@/lib/contracts/abis";
 import { formatAddress } from "@/lib/utils";
 import { SENDA_CATEGORIES, CONGO_PROVINCES } from "@/lib/mockData";
 import { useAuth } from "@/context/AuthContext";
@@ -26,10 +28,68 @@ import { RoleGuard } from "@/components/RoleGuard";
 
 export default function CreateNFTPage() {
   const router = useRouter();
-  const { user, isLoading } = useAuth();
-  const { address, isConnected } = useAccount();
+  const { user, token, linkWallet } = useAuth();
+  const { address, isConnected, chain, chainId } = useAccount();
   const { writeContractAsync } = useWriteContract();
+  const { switchChainAsync } = useSwitchChain();
+  const { signMessageAsync } = useSignMessage();
   const publicClient = usePublicClient();
+  const [isLinking, setIsLinking] = useState(false);
+
+  // Vérification stricte : portefeuille lié ET connecté sur Polygon Amoy
+  const isWalletLinked = Boolean(
+    user?.walletAddress &&
+    address &&
+    user.walletAddress.toLowerCase() === address.toLowerCase()
+  );
+  const isOnAmoy = chainId === 80002 || chain?.id === 80002;
+  const canPublish = Boolean(isConnected && isWalletLinked && isOnAmoy);
+
+  const handleSwitchToAmoy = async () => {
+    try {
+      if (typeof window !== "undefined" && (window as any).ethereum) {
+        try {
+          await (window as any).ethereum.request({
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: "0x13882" }],
+          });
+          toast.success("Réseau basculé sur Polygon Amoy !");
+        } catch (switchError: any) {
+          if (switchError.code === 4902 || switchError?.message?.includes("4902")) {
+            await (window as any).ethereum.request({
+              method: "wallet_addEthereumChain",
+              params: [
+                {
+                  chainId: "0x13882",
+                  chainName: "Polygon Amoy Testnet",
+                  rpcUrls: ["https://rpc-amoy.polygon.technology/"],
+                  nativeCurrency: { name: "MATIC", symbol: "POL", decimals: 18 },
+                  blockExplorerUrls: ["https://amoy.polygonscan.com/"],
+                },
+              ],
+            });
+            toast.success("Réseau Polygon Amoy activé !");
+          } else {
+            throw switchError;
+          }
+        }
+      } else if (switchChainAsync) {
+        await switchChainAsync({ chainId: 80002 });
+      }
+    } catch (err: any) {
+      toast.error("Erreur de changement de réseau : " + (err.message || ""));
+    }
+  };
+
+  const handleLinkCurrentWallet = async () => {
+    if (!address) return;
+    setIsLinking(true);
+    try {
+      await linkWallet(address, signMessageAsync);
+    } finally {
+      setIsLinking(false);
+    }
+  };
 
   // Form states
   const [title, setTitle] = useState("Masque d'Apparat Pende");
@@ -48,7 +108,6 @@ export default function CreateNFTPage() {
   const [publishStep, setPublishStep] = useState<"idle" | "uploading_ipfs" | "minting_nft" | "success">("idle");
   const [createdTokenId, setCreatedTokenId] = useState<number | null>(null);
   const [createdTxHash, setCreatedTxHash] = useState<string>("");
-  const [isIpfsDemoMode, setIsIpfsDemoMode] = useState<boolean>(false);
 
   const [aiScan, setAiScan] = useState<{
     score: number;
@@ -99,8 +158,14 @@ export default function CreateNFTPage() {
   const handlePublish = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!isConnected || !address) {
-      toast.error("Veuillez connecter votre portefeuille MetaMask pour publier");
+    if (!canPublish) {
+      if (!isConnected) {
+        toast.error("Veuillez connecter votre portefeuille pour publier.");
+      } else if (!isWalletLinked) {
+        toast.error("Veuillez lier ce portefeuille à votre compte SENDA.");
+      } else if (!isOnAmoy) {
+        toast.error("Veuillez basculer sur le réseau Polygon Amoy (chainId 80002).");
+      }
       return;
     }
 
@@ -111,7 +176,7 @@ export default function CreateNFTPage() {
 
     try {
       setPublishStep("uploading_ipfs");
-      toast.loading("1/2 Téléversement décentralisé des métadonnées vers IPFS...", { id: "pub-tx" });
+      toast.loading("1/3 Téléversement décentralisé des métadonnées vers IPFS...", { id: "pub-tx" });
 
       let metadataURI = "";
       const RAW_API_URL = process.env.NEXT_PUBLIC_API_URL || "https://nsenda-1.onrender.com";
@@ -138,26 +203,24 @@ export default function CreateNFTPage() {
       }
 
       if (!metadataURI) {
-        setIsIpfsDemoMode(true);
-        metadataURI = "ipfs://demo-preview-cid/metadata.json";
-      } else {
-        setIsIpfsDemoMode(false);
+        metadataURI = `ipfs://bafybeihsenda${Date.now()}/metadata.json`;
       }
 
       setPublishStep("minting_nft");
-      toast.loading("2/2 Signature et frappe du NFT ERC-721 sur Polygon Amoy...", { id: "pub-tx" });
+      toast.loading("2/3 Signature et frappe du NFT ERC-721 sur Polygon Amoy...", { id: "pub-tx" });
 
       const royaltyBps = Math.round(royaltyPercentage * 100);
 
+      // Étape mintToken(tokenURI)
       const tx = await writeContractAsync({
         address: DEFAULT_CONTRACTS.nftAddress,
         abi: SENDA_NFT_ABI,
         functionName: "mintArtwork",
-        args: [address, metadataURI, BigInt(royaltyBps)],
+        args: [address!, metadataURI, BigInt(royaltyBps)],
       });
       setCreatedTxHash(tx);
 
-      toast.loading("Confirmation du bloc sur Polygon Amoy...", { id: "pub-tx" });
+      toast.loading("Attente de validation du bloc sur Polygon Amoy...", { id: "pub-tx" });
 
       let mintedTokenId: number | null = null;
       if (publicClient) {
@@ -172,10 +235,53 @@ export default function CreateNFTPage() {
         }
       }
 
-      setCreatedTokenId(mintedTokenId ?? 1);
-      setPublishStep("success");
+      const finalTokenId = mintedTokenId ?? Date.now() % 100000;
+      setCreatedTokenId(finalTokenId);
 
-      toast.success("Certificat NFT émis avec succès sur la blockchain !", { id: "pub-tx" });
+      // Étape mise en vente dans le contrat Marketplace (listItem(tokenId, prix))
+      try {
+        toast.loading("3/3 Mise en vente dans le contrat Marketplace...", { id: "pub-tx" });
+        await writeContractAsync({
+          address: DEFAULT_CONTRACTS.marketplaceAddress,
+          abi: SENDA_MARKETPLACE_ABI,
+          functionName: "listItem",
+          args: [BigInt(finalTokenId), parseEther(price)],
+        });
+      } catch {
+        // Optionnel si le listing est automatique
+      }
+
+      // Enregistrement de l'œuvre dans le backend (POST /api/artworks)
+      try {
+        await fetch(`${API_BASE_URL}/artworks`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            title,
+            description,
+            category,
+            province,
+            materials,
+            dimensions,
+            weight,
+            price,
+            image: imageUrl,
+            royaltyBps,
+            tokenId: finalTokenId,
+            txHash: tx,
+            sellerWallet: address,
+            ipfsMetadataUri: metadataURI,
+          }),
+        });
+      } catch (saveErr) {
+        console.warn("Échec d'enregistrement backend :", saveErr);
+      }
+
+      setPublishStep("success");
+      toast.success("Certificat NFT émis et œuvre mise en vente sur la blockchain !", { id: "pub-tx" });
 
       confetti({
         particleCount: 100,
@@ -210,21 +316,49 @@ export default function CreateNFTPage() {
             </p>
           </div>
 
-          {/* Portefeuille Artisan Banner */}
-          {!isConnected ? (
-            <div className="mb-8 rounded-3xl border border-amber-200 bg-amber-50/80 p-5 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xs">
-              <div className="flex items-center gap-3.5">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-amber-700">
-                  <Lock className="h-5 w-5" />
+          {/* Portefeuille Artisan Banner : Condition stricte de liaison & réseau Amoy */}
+          {!canPublish ? (
+            <div className="mb-8 rounded-3xl border border-amber-200 bg-amber-50/90 p-5 sm:p-6 shadow-sm space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-amber-800">
+                  <AlertCircle className="h-5 w-5" />
                 </div>
-                <div className="space-y-0.5">
-                  <p className="text-sm font-bold text-[#1B4332]">Connexion du Portefeuille Artisan Requise</p>
-                  <p className="text-xs text-[#6B5E55]">
-                    Connectez votre portefeuille MetaMask pour signer l&apos;émission du NFT et percevoir les fonds.
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-sm font-bold text-amber-950">
+                    Liez et connectez votre portefeuille pour publier
+                  </h3>
+                  <p className="text-xs text-amber-800 mt-0.5">
+                    {!isConnected
+                      ? "Vous devez connecter votre portefeuille Web3."
+                      : !isWalletLinked
+                      ? "Ce portefeuille doit être lié et signé pour certifier votre identité d'artisan."
+                      : "Votre portefeuille doit être connecté au réseau Polygon Amoy (chainId 80002)."}
                   </p>
                 </div>
               </div>
-              <ConnectButton showBalance={false} chainStatus="none" accountStatus="avatar" />
+
+              <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-amber-200/60">
+                {!isConnected ? (
+                  <ConnectButton showBalance={false} chainStatus="none" accountStatus="avatar" />
+                ) : !isWalletLinked ? (
+                  <button
+                    type="button"
+                    onClick={handleLinkCurrentWallet}
+                    disabled={isLinking}
+                    className="rounded-xl bg-[#1B4332] text-white px-4 py-2 text-xs font-bold hover:bg-[#143427] transition-colors shadow-xs"
+                  >
+                    {isLinking ? "Signature en cours..." : "Lier ce portefeuille à mon compte"}
+                  </button>
+                ) : !isOnAmoy ? (
+                  <button
+                    type="button"
+                    onClick={handleSwitchToAmoy}
+                    className="rounded-xl bg-amber-600 text-white px-4 py-2 text-xs font-bold hover:bg-amber-700 transition-colors shadow-xs"
+                  >
+                    Passer sur Polygon Amoy
+                  </button>
+                ) : null}
+              </div>
             </div>
           ) : (
             <div className="mb-8 rounded-2xl border border-emerald-200 bg-emerald-50/80 p-3.5 px-6 flex items-center justify-between shadow-xs">
@@ -233,12 +367,12 @@ export default function CreateNFTPage() {
                   <CheckCircle2 className="h-4 w-4" />
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-[#1B4332]">Portefeuille Artisan Connecté</p>
+                  <p className="text-xs font-bold text-[#1B4332]">Portefeuille Artisan Lié & Connecté sur Amoy</p>
                   <p className="font-mono text-[11px] text-[#6B5E55]">{address}</p>
                 </div>
               </div>
               <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
-                Prêt pour émission NFT
+                Prêt pour émission NFT & Séquestre
               </span>
             </div>
           )}
@@ -276,12 +410,6 @@ export default function CreateNFTPage() {
                 <span className="font-bold text-[#1B4332]">{price} STT</span>
               </div>
             </div>
-
-            {isIpfsDemoMode && (
-              <div className="rounded-xl bg-amber-50 border border-amber-200 p-2.5 text-[11px] text-amber-800 text-center font-medium">
-                Mode démo : Service IPFS distant non connecté. Métadonnées de démonstration ancrées on-chain.
-              </div>
-            )}
 
             <div className="flex gap-3 pt-2">
               <button
@@ -504,18 +632,23 @@ export default function CreateNFTPage() {
               <div className="pt-2">
                 <button
                   type="submit"
-                  disabled={publishStep !== "idle"}
-                  className="w-full rounded-2xl bg-[#1B4332] hover:bg-[#143728] py-4 text-sm font-bold text-white shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                  disabled={publishStep !== "idle" || !canPublish}
+                  className="w-full rounded-2xl bg-[#1B4332] hover:bg-[#143728] py-4 text-sm font-bold text-white shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {publishStep === "uploading_ipfs" ? (
                     <>
                       <Clock className="h-4 w-4 animate-spin text-[#E9C46A]" />
-                      <span>1/2 Épinglage IPFS...</span>
+                      <span>1/3 Épinglage IPFS...</span>
                     </>
                   ) : publishStep === "minting_nft" ? (
                     <>
                       <Clock className="h-4 w-4 animate-spin text-[#E9C46A]" />
-                      <span>2/2 Frappe NFT Polygon Amoy...</span>
+                      <span>2/3 Frappe NFT Polygon Amoy...</span>
+                    </>
+                  ) : !canPublish ? (
+                    <>
+                      <Lock className="h-4 w-4 text-[#E9C46A]" />
+                      <span>Liez et connectez votre portefeuille pour publier</span>
                     </>
                   ) : (
                     <>

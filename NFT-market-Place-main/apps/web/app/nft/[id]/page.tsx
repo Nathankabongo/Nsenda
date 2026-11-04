@@ -20,7 +20,7 @@ import {
   Cpu,
 } from "lucide-react";
 import { BuyModal } from "@/components/BuyModal";
-import { INITIAL_DEMO_NFTS, NFTItem } from "@/lib/mockData";
+import { INITIAL_CATALOG_NFTS, NFTItem } from "@/lib/mockData";
 import { DEFAULT_CONTRACTS } from "@/lib/contracts/abis";
 import { formatAddress } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
@@ -36,8 +36,8 @@ export default function NFTDetailPage() {
 
   const nft = useMemo(() => {
     return (
-      INITIAL_DEMO_NFTS.find((item) => item.tokenId.toString() === tokenIdParam) ||
-      INITIAL_DEMO_NFTS[0]
+      INITIAL_CATALOG_NFTS.find((item) => item.tokenId.toString() === tokenIdParam) ||
+      INITIAL_CATALOG_NFTS[0]
     );
   }, [tokenIdParam]);
 

@@ -45,7 +45,10 @@ enum EscrowStatus {
 
 model User {
   id                  String             @id @default(uuid())
-  walletAddress       String             @unique @map("wallet_address")
+  email               String?            @unique
+  passwordHash        String?            @map("password_hash")
+  walletAddress       String?            @unique @map("wallet_address")
+  activeNonce         String?            @map("active_nonce")
   displayName         String?            @map("display_name")
   role                Role               @default(BUYER)
   verificationStatus  VerificationStatus @default(UNVERIFIED) @map("verification_status")
@@ -57,6 +60,7 @@ model User {
   artworks            Artwork[]
   boughtOrders        Order[]            @relation("BuyerOrders")
   soldOrders          Order[]            @relation("SellerOrders")
+  sttGrants           SttGrant[]
 
   @@map("users")
 }
@@ -141,4 +145,18 @@ model EscrowRecord {
   order           Order        @relation(fields: [orderId], references: [id])
 
   @@map("escrow_records")
+}
+
+model SttGrant {
+  id            String   @id @default(uuid())
+  userId        String   @map("user_id")
+  walletAddress String   @map("wallet_address")
+  amount        Decimal  @db.Decimal(18, 4)
+  grantType     String   @map("grant_type") // "WELCOME", "FAUCET"
+  txHash        String?  @map("tx_hash")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  user          User     @relation(fields: [userId], references: [id])
+
+  @@map("stt_grants")
 }

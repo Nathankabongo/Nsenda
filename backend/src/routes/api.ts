@@ -4,6 +4,7 @@ import path from "path";
 import fs from "fs";
 import { PinataService } from "../services/pinataService";
 import { AIAuthenticationService, AIAnalysisResult } from "../services/aiAuthenticationService";
+import { SttTreasuryService } from "../services/sttTreasuryService";
 import {
   hashPassword,
   verifyPassword,
@@ -707,6 +708,197 @@ router.post("/auth/verify-wallet", authenticateToken, async (req: Request, res: 
   });
 });
 
+/**
+ * POST /api/users/link-wallet
+ * Authentifiée : liaison cryptographique du portefeuille au compte utilisateur
+ * Vérifie l'unicité stricte de l'adresse (un seul compte par adresse)
+ */
+router.post("/users/link-wallet", authenticateToken, async (req: Request, res: Response) => {
+  const { walletAddress, signature, message } = req.body;
+
+  if (!walletAddress || !signature || !message) {
+    return res.status(400).json({
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "Adresse, signature et message sont requis." },
+    });
+  }
+
+  const user = usersStore.find((u) => u.id === req.user!.id);
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      error: { code: "USER_NOT_FOUND", message: "Utilisateur introuvable." },
+    });
+  }
+
+  const targetAddress = walletAddress.toLowerCase();
+
+  // Règle d'unicité : un portefeuille ne peut être lié qu'à un seul compte SENDA
+  const existingWithSameWallet = usersStore.find(
+    (u) => u.walletAddress?.toLowerCase() === targetAddress && u.id !== user.id
+  );
+  if (existingWithSameWallet) {
+    return res.status(409).json({
+      success: false,
+      error: {
+        code: "WALLET_ALREADY_LINKED",
+        message: "Cette adresse de portefeuille est déjà associée à un autre compte SENDA.",
+      },
+    });
+  }
+
+  // Vérification cryptographique de la signature par viem
+  const isValid = await verifySignature(walletAddress, message, signature);
+  if (!isValid) {
+    return res.status(401).json({
+      success: false,
+      error: {
+        code: "SIGNATURE_VERIFICATION_FAILED",
+        message: "La signature cryptographique ne correspond pas à la clé privée de l'adresse fournie.",
+      },
+    });
+  }
+
+  user.walletAddress = targetAddress;
+  user.activeNonce = null;
+
+  const updatedToken = generateJwtToken({
+    id: user.id,
+    email: user.email,
+    displayName: user.displayName,
+    role: user.role,
+    verificationStatus: user.verificationStatus,
+    walletAddress: user.walletAddress,
+  });
+
+  res.status(200).json({
+    success: true,
+    data: {
+      message: "Portefeuille Web3 associé à votre compte avec succès.",
+      token: updatedToken,
+      user: {
+        id: user.id,
+        email: user.email,
+        displayName: user.displayName,
+        role: user.role,
+        verificationStatus: user.verificationStatus,
+        walletAddress: user.walletAddress,
+        workshopName: user.workshopName,
+        province: user.province,
+      },
+    },
+  });
+});
+
+/**
+ * GET /api/users/nonce & POST /api/users/nonce
+ * Génération de défi cryptographique pour la signature Web3
+ */
+router.get("/users/nonce", authenticateToken, (req: Request, res: Response) => {
+  const user = usersStore.find((u) => u.id === req.user!.id);
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      error: { code: "USER_NOT_FOUND", message: "Utilisateur introuvable." },
+    });
+  }
+  const nonce = generateNonce();
+  user.activeNonce = nonce;
+  const challengeMessage = formatChallengeMessage(user.walletAddress || "0x0000000000000000000000000000000000000000", nonce);
+  res.status(200).json({ success: true, data: { nonce, challengeMessage } });
+});
+
+router.post("/users/nonce", authenticateToken, (req: Request, res: Response) => {
+  const { walletAddress } = req.body;
+  const user = usersStore.find((u) => u.id === req.user!.id);
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      error: { code: "USER_NOT_FOUND", message: "Utilisateur introuvable." },
+    });
+  }
+  const nonce = generateNonce();
+  user.activeNonce = nonce;
+  const targetAddress = walletAddress || user.walletAddress || "0x0000000000000000000000000000000000000000";
+  const challengeMessage = formatChallengeMessage(targetAddress, nonce);
+  res.status(200).json({ success: true, data: { nonce, challengeMessage, walletAddress: targetAddress } });
+});
+
+/**
+ * POST /api/stt/claim
+ * Attribution des jetons STT selon la politique officielle
+ * 1. Bienvenue : 1 000 STT (compte vérifié + portefeuille lié)
+ * 2. Anti-abus : 1 versement de bienvenue par compte et par portefeuille
+ * 3. Recharge : 500 STT tous les 7 jours si solde < 200 STT
+ * 4. Plafond : 5 000 STT cumulés max
+ * 5. Distribution depuis le portefeuille de trésorerie
+ */
+router.post("/stt/claim", authenticateToken, async (req: Request, res: Response) => {
+  try {
+    const user = usersStore.find((u) => u.id === req.user!.id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: { code: "USER_NOT_FOUND", message: "Utilisateur introuvable." },
+      });
+    }
+
+    if (!user.walletAddress) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: "WALLET_NOT_LINKED",
+          message: "Veuillez d'abord lier votre portefeuille Web3 avant de demander une attribution de jetons STT.",
+        },
+      });
+    }
+
+    const { currentBalance } = req.body;
+    const isVerified = user.verificationStatus === "VERIFIED" || Boolean(user.email);
+
+    const result = await SttTreasuryService.claimStt({
+      userId: user.id,
+      email: user.email,
+      isVerified,
+      walletAddress: user.walletAddress,
+      currentBalance: currentBalance !== undefined ? parseFloat(currentBalance) : undefined,
+    });
+
+    res.status(200).json({
+      success: true,
+      data: result,
+    });
+  } catch (err: any) {
+    res.status(400).json({
+      success: false,
+      error: {
+        code: "STT_CLAIM_ERROR",
+        message: err.message || "Erreur lors de l'attribution des jetons STT.",
+      },
+    });
+  }
+});
+
+/**
+ * GET /api/stt/grant-status
+ * Consultation de l'éligibilité et du cumul de dotation STT
+ */
+router.get("/stt/grant-status", authenticateToken, (req: Request, res: Response) => {
+  const user = usersStore.find((u) => u.id === req.user!.id);
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      error: { code: "USER_NOT_FOUND", message: "Utilisateur introuvable." },
+    });
+  }
+
+  const status = SttTreasuryService.getGrantStatus(user.id, user.walletAddress);
+  res.status(200).json({
+    success: true,
+    data: status,
+  });
+});
+
 // ============================================================================
 // 3. CATALOGUE D'ŒUVRES ARTISANALES
 // ============================================================================
@@ -769,10 +961,26 @@ router.get("/artworks/:id", (req: Request, res: Response) => {
 
 /**
  * POST /api/artworks
- * Publication d'une œuvre artisanale (protégée : rôle ARTISAN et statut VERIFIED obligatoire)
+ * Publication d'une œuvre artisanale (protégée : rôle ARTISAN obligatoire)
  */
-router.post("/artworks", authenticateToken, requireVerifiedArtisan, (req: Request, res: Response) => {
-  const { title, description, category, province, materials, dimensions, weight, price, image, royaltyBps } = req.body;
+router.post("/artworks", authenticateToken, requireRole("ARTISAN"), (req: Request, res: Response) => {
+  const {
+    title,
+    description,
+    category,
+    province,
+    materials,
+    dimensions,
+    weight,
+    price,
+    image,
+    royaltyBps,
+    tokenId,
+    txHash,
+    sellerWallet,
+    ipfsMetadataUri,
+    ipfsImageUri,
+  } = req.body;
 
   if (!title || !price) {
     return res.status(400).json({
@@ -782,7 +990,7 @@ router.post("/artworks", authenticateToken, requireVerifiedArtisan, (req: Reques
   }
 
   const user = usersStore.find((u) => u.id === req.user!.id);
-  const artisanAddress = user?.walletAddress || req.user!.walletAddress;
+  const artisanAddress = sellerWallet || user?.walletAddress || req.user!.walletAddress;
 
   if (!artisanAddress) {
     return res.status(400).json({
@@ -810,11 +1018,11 @@ router.post("/artworks", authenticateToken, requireVerifiedArtisan, (req: Reques
     weight: weight || "1.00 kg",
     image: image || "/artworks/hero_artisanat.jpg",
     status: "MINTED_LISTED",
-    tokenId: artworksStore.length + 1,
+    tokenId: tokenId ? Number(tokenId) : artworksStore.length + 1,
     royaltyBps: Number(royaltyBps) || 500, // 5% par défaut
     verificationStatus: "VERIFIED",
-    ipfsMetadataUri: "ipfs://bafybeihsendaart" + Date.now() + "/metadata.json",
-    ipfsImageUri: "ipfs://bafybeicimage" + Date.now() + "/piece.jpg",
+    ipfsMetadataUri: ipfsMetadataUri || ("ipfs://bafybeihsendaart" + Date.now() + "/metadata.json"),
+    ipfsImageUri: ipfsImageUri || image || ("ipfs://bafybeicimage" + Date.now() + "/piece.jpg"),
   };
 
   newArtwork.aiAuthentication = AIAuthenticationService.analyzeCraft({

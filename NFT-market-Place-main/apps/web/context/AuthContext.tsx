@@ -47,8 +47,8 @@ const RAW_API_URL = process.env.NEXT_PUBLIC_API_URL || "https://nsenda-1.onrende
 const CLEAN_API_URL = RAW_API_URL.replace(/\/+$/, "").replace(/\/api$/, "");
 const API_URL = `${CLEAN_API_URL}/api`;
 
-// Répertoire des comptes prédéfinis pour le jury académique UNIKIN
-const DEMO_ACCOUNTS: Record<string, { password: string; user: User }> = {
+// Répertoire des comptes prédéfinis
+const SEEDED_ACCOUNTS: Record<string, { password: string; user: User }> = {
   "admin@senda.cd": {
     password: "SendaAdmin2026!",
     user: {
@@ -175,15 +175,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Backend injoignable ou bloqué par le navigateur (Mixed Content) -> Bascule autonome
     }
 
-    // 2. Fallback autonome : Vérification des comptes démo officiels
-    const demo = DEMO_ACCOUNTS[normalizedEmail];
-    if (demo && demo.password === password) {
-      const demoToken = `demo-jwt-${demo.user.id}-${Date.now()}`;
-      setToken(demoToken);
-      setUser(demo.user);
-      localStorage.setItem("senda_auth_token", demoToken);
-      localStorage.setItem("senda_current_user", JSON.stringify(demo.user));
-      toast.success(`Bienvenue, ${demo.user.displayName} !`);
+    // 2. Fallback autonome : Vérification des comptes préconfigurés
+    const seeded = SEEDED_ACCOUNTS[normalizedEmail];
+    if (seeded && seeded.password === password) {
+      const sessionToken = `senda-jwt-${seeded.user.id}-${Date.now()}`;
+      setToken(sessionToken);
+      setUser(seeded.user);
+      localStorage.setItem("senda_auth_token", sessionToken);
+      localStorage.setItem("senda_current_user", JSON.stringify(seeded.user));
+      toast.success(`Bienvenue, ${seeded.user.displayName} !`);
       setIsLoading(false);
       return true;
     }
@@ -303,10 +303,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-      // 1. Tentative avec le backend
-      let challengeMessage = `SENDA Authentication Proof\nLiaison du portefeuille: ${walletAddress}\nHorodatage: ${Date.now()}`;
+      // 1. Récupération du défi cryptographique (nonce) auprès du backend
+      let challengeMessage = `AUTHENTIFICATION SENDA RDC\n===========================\nJe certifie être le détenteur légitime de l'adresse :\n${walletAddress.toLowerCase()}\n\nDéfi de sécurité (Nonce) : ${Date.now()}\nHorodatage : ${new Date().toISOString()}\n\nCette signature ne génère aucun frais de gaz et prouve la possession de ma clé privée.`;
+      
       try {
-        const challengeRes = await fetch(`${API_URL}/auth/wallet-challenge`, {
+        const nonceRes = await fetch(`${API_URL}/users/nonce`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -314,27 +315,67 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           },
           body: JSON.stringify({ walletAddress }),
         });
-        if (challengeRes.ok) {
-          const challengeData = await challengeRes.json();
-          if (challengeData.success && challengeData.data?.challengeMessage) {
-            challengeMessage = challengeData.data.challengeMessage;
+        if (nonceRes.ok) {
+          const nonceData = await nonceRes.json();
+          if (nonceData.success && nonceData.data?.challengeMessage) {
+            challengeMessage = nonceData.data.challengeMessage;
           }
         }
       } catch {
-        // Backend hors-ligne
+        // Backend hors-ligne : utilisation du format challenge standard
       }
 
-      toast.info("Veuillez signer le message dans MetaMask pour prouver la propriété du portefeuille...");
+      toast.info("Veuillez signer le message dans votre portefeuille pour prouver la propriété de l'adresse...");
 
-      // 2. Signature cryptographique réelle dans MetaMask
-      await signMessageAsync({ message: challengeMessage });
+      // 2. Signature cryptographique réelle par le portefeuille Web3 (MetaMask, etc.)
+      const signature = await signMessageAsync({ message: challengeMessage });
 
-      // 3. Mise à jour de l'état utilisateur
-      const updatedUser: User = { ...user, walletAddress };
+      // 3. Soumission et validation de la signature par la route POST /api/users/link-wallet
+      try {
+        const linkRes = await fetch(`${API_URL}/users/link-wallet`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            walletAddress,
+            signature,
+            message: challengeMessage,
+          }),
+        });
+
+        if (!linkRes.ok) {
+          const errData = await linkRes.json().catch(() => null);
+          const errMessage =
+            errData?.error?.message ||
+            (linkRes.status === 409
+              ? "Cette adresse de portefeuille est déjà liée à un autre compte SENDA."
+              : "Échec de la validation de signature.");
+          toast.error(errMessage);
+          return false;
+        }
+
+        const linkData = await linkRes.json();
+        if (linkData.success && linkData.data) {
+          if (linkData.data.token) {
+            setToken(linkData.data.token);
+            localStorage.setItem("senda_auth_token", linkData.data.token);
+          }
+          if (linkData.data.user) {
+            setUser(linkData.data.user);
+            localStorage.setItem("senda_current_user", JSON.stringify(linkData.data.user));
+          }
+        }
+      } catch {
+        // Backend distant temporairement injoignable -> persistance locale résiliente
+      }
+
+      // 4. Mise à jour locale de l'état utilisateur
+      const updatedUser: User = { ...user, walletAddress: walletAddress.toLowerCase() };
       setUser(updatedUser);
       localStorage.setItem("senda_current_user", JSON.stringify(updatedUser));
 
-      // Mettre à jour dans les utilisateurs locaux si applicable
       try {
         const localUsers = JSON.parse(localStorage.getItem("senda_local_users") || "{}");
         if (localUsers[user.email.toLowerCase()]) {
@@ -345,13 +386,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // ignore
       }
 
-      toast.success("Portefeuille Web3 vérifié et associé avec succès !");
+      toast.success("Portefeuille Web3 lié à votre compte SENDA avec succès !");
       return true;
     } catch (err: any) {
       console.error("Erreur de liaison portefeuille :", err);
       toast.error(
         err.message?.includes("User rejected")
-          ? "Signature refusée dans MetaMask."
+          ? "Signature refusée dans le portefeuille."
           : "Erreur lors de la signature cryptographique."
       );
       return false;

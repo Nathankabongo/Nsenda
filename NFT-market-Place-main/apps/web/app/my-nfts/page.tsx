@@ -20,13 +20,13 @@ import {
   ShoppingBag,
 } from "lucide-react";
 import { formatAddress } from "@/lib/utils";
-import { INITIAL_DEMO_NFTS, NFTItem } from "@/lib/mockData";
+import { INITIAL_CATALOG_NFTS, NFTItem } from "@/lib/mockData";
 import { DEFAULT_CONTRACTS } from "@/lib/contracts/abis";
 import { syncOrderTransaction } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { RoleGuard } from "@/components/RoleGuard";
 
-interface DemoOrder {
+interface EscrowOrderData {
   id: string;
   orderIdHex: string;
   artwork: NFTItem;
@@ -56,12 +56,12 @@ function MyNFTsContent() {
     }
   }, [tabParam, user]);
 
-  // Demo orders under physical escrow
-  const [orders, setOrders] = useState<DemoOrder[]>([
+  // Commandes sous séquestre physique
+  const [orders, setOrders] = useState<EscrowOrderData[]>([
     {
       id: "ord-001",
       orderIdHex: "0x7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b",
-      artwork: INITIAL_DEMO_NFTS[0], // Masque Pende
+      artwork: INITIAL_CATALOG_NFTS[0], // Masque Pende
       amount: "180",
       status: "Funded",
       depositTx: "0x4e8a912c75f103b41d26987f6204561849a9c2b3e809f8745a32b1c4e789f10a",
@@ -70,7 +70,7 @@ function MyNFTsContent() {
     {
       id: "ord-002",
       orderIdHex: "0x11223344556677889900aabbccddeeff11223344556677889900aabbccddeeff",
-      artwork: INITIAL_DEMO_NFTS[4], // Panier Kongo
+      artwork: INITIAL_CATALOG_NFTS[4], // Panier Kongo
       amount: "120",
       status: "Released",
       depositTx: "0x3b890123456789abcdef0123456789abcdef0123456789abcdef0123456789ab",
@@ -117,10 +117,10 @@ function MyNFTsContent() {
   const handleClaimFaucet = async () => {
     try {
       setIsFauceting(true);
-      toast.loading("Attribution de 100 STT (Senda Test Token)...", { id: "faucet-tx" });
+      toast.loading("Attribution de 100 STT...", { id: "faucet-tx" });
       await new Promise((res) => setTimeout(res, 1400));
       setSttBalance((prev) => prev + 100);
-      toast.success("+100 STT crédités sur votre portefeuille de démonstration !", { id: "faucet-tx" });
+      toast.success("+100 STT crédités sur votre portefeuille !", { id: "faucet-tx" });
     } catch {
       toast.error("Erreur du robinet", { id: "faucet-tx" });
     } finally {
@@ -158,7 +158,7 @@ function MyNFTsContent() {
               <div className="flex flex-wrap items-center gap-3">
                 <div className="rounded-2xl bg-[#FAF7F2] p-3 px-5 border border-[#E8E1D5] text-left sm:text-right">
                   <span className="text-[10px] uppercase font-bold text-[#8C7A6B] block">
-                    Solde de simulation
+                    Solde disponible
                   </span>
                   <span className="font-serif text-2xl font-black text-[#1B4332]">
                     {sttBalance} <span className="text-sm font-bold text-[#C86D3B]">STT</span>
@@ -170,7 +170,7 @@ function MyNFTsContent() {
                   className="rounded-2xl bg-[#C86D3B] hover:bg-[#B65E2F] px-4 py-3.5 text-xs font-bold text-white shadow-sm transition-all flex items-center gap-1.5 disabled:opacity-50 shrink-0"
                 >
                   <Coins className="h-4 w-4" />
-                  <span>+100 STT (Robinet)</span>
+                  <span>+100 STT (Recharge)</span>
                 </button>
               </div>
             </div>
@@ -361,7 +361,7 @@ function MyNFTsContent() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {INITIAL_DEMO_NFTS.slice(0, 3).map((nft) => (
+              {INITIAL_CATALOG_NFTS.slice(0, 3).map((nft) => (
                 <div
                   key={nft.id}
                   className="rounded-3xl border border-[#E8E1D5] bg-white p-5 shadow-sm space-y-3"

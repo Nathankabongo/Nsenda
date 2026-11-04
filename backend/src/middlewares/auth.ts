@@ -69,7 +69,8 @@ export function optionalAuth(req: Request, res: Response, next: NextFunction) {
 /**
  * Contrôle d'accès basé sur les rôles (RBAC)
  */
-export function requireRole(allowedRoles: Array<"BUYER" | "ARTISAN" | "ADMIN">) {
+export function requireRole(allowedRoles: Array<string> | string) {
+  const normalized = (Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles]).map((r) => r.toUpperCase());
   return (req: Request, res: Response, next: NextFunction) => {
     if (!req.user) {
       return res.status(401).json({
@@ -78,12 +79,12 @@ export function requireRole(allowedRoles: Array<"BUYER" | "ARTISAN" | "ADMIN">) 
       });
     }
 
-    if (!allowedRoles.includes(req.user.role as any)) {
+    if (!normalized.includes(req.user.role.toUpperCase())) {
       return res.status(403).json({
         success: false,
         error: {
           code: "FORBIDDEN",
-          message: `Accès refusé. Cette action nécessite l'un des rôles suivants : ${allowedRoles.join(", ")}.`,
+          message: `Accès refusé. Cette action nécessite l'un des rôles suivants : ${normalized.join(", ")}.`,
         },
       });
     }
