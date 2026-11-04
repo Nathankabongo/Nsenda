@@ -52,18 +52,32 @@ export default function HomePage() {
   const [selectedNFTForBuy, setSelectedNFTForBuy] = useState<NFTItem | null>(null);
   const [isBuyModalOpen, setIsBuyModalOpen] = useState(false);
 
-  // Synchronisation dynamique avec le backend REST
+  // Synchronisation dynamique avec le backend REST et le cache local
   useEffect(() => {
-    getArtworks({
-      category: selectedCategory,
-      province: selectedProvince,
-      search: searchQuery,
-      sortBy: sortBy,
-    }).then((items) => {
-      if (items && items.length > 0) {
-        setArtworks(items);
-      }
-    });
+    const refreshArtworks = () => {
+      getArtworks({
+        category: selectedCategory,
+        province: selectedProvince,
+        search: searchQuery,
+        sortBy: sortBy,
+      }).then((items) => {
+        if (items && items.length > 0) {
+          setArtworks(items);
+        }
+      });
+    };
+
+    refreshArtworks();
+
+    // Écouter les événements de nouvelle publication locale
+    if (typeof window !== "undefined") {
+      window.addEventListener("senda_artworks_updated", refreshArtworks);
+      window.addEventListener("storage", refreshArtworks);
+      return () => {
+        window.removeEventListener("senda_artworks_updated", refreshArtworks);
+        window.removeEventListener("storage", refreshArtworks);
+      };
+    }
   }, [selectedCategory, selectedProvince, searchQuery, sortBy]);
 
   // Filtrage des œuvres

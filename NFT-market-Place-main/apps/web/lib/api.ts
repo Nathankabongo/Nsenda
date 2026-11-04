@@ -1,9 +1,22 @@
 import { INITIAL_CATALOG_NFTS, NFTItem } from "./mockData";
 import { DEFAULT_CONTRACTS } from "./contracts/abis";
 
-const RAW_API_URL = process.env.NEXT_PUBLIC_API_URL || "https://nsenda-1.onrender.com";
-const CLEAN_API_URL = RAW_API_URL.replace(/\/+$/, "").replace(/\/api$/, "");
-const API_BASE_URL = `${CLEAN_API_URL}/api`;
+/**
+ * Détermine dynamiquement l'URL de base de l'API :
+ * - Si le navigateur tourne en local ou sur le réseau Wi-Fi local (ex. 192.168.x.x / localhost) :
+ *   se connecte directement au backend local sur le port 4000.
+ * - Sinon (sur Vercel en production) : se connecte à Render (NEXT_PUBLIC_API_URL).
+ */
+export function getApiBaseUrl(): string {
+  if (typeof window !== "undefined") {
+    const host = window.location.hostname;
+    if (host === "localhost" || host === "127.0.0.1" || host.startsWith("192.168.") || host.startsWith("10.")) {
+      return `http://${host}:4000/api`;
+    }
+  }
+  const raw = process.env.NEXT_PUBLIC_API_URL || "https://nsenda-1.onrender.com";
+  return `${raw.replace(/\/+$/, "").replace(/\/api$/, "")}/api`;
+}
 
 export interface CreateOrderParams {
   artworkId: string;
@@ -28,6 +41,23 @@ export interface CreateOrderResult {
 }
 
 /**
+ * Sauvegarde une œuvre publiée localement pour un affichage immédiat dans le catalogue
+ */
+export function savePublishedArtworkLocally(item: NFTItem) {
+  if (typeof window === "undefined") return;
+  try {
+    const stored = localStorage.getItem("senda_local_artworks");
+    const list: NFTItem[] = stored ? JSON.parse(stored) : [];
+    const filtered = list.filter((i) => i.id !== item.id && i.tokenId !== item.tokenId);
+    localStorage.setItem("senda_local_artworks", JSON.stringify([item, ...filtered]));
+    // Notifier tous les composants de la page
+    window.dispatchEvent(new Event("senda_artworks_updated"));
+  } catch (err) {
+    console.warn("Échec d'enregistrement local de l'œuvre", err);
+  }
+}
+
+/**
  * Adaptateur universel convertissant un objet brut d'API ou d'état en un NFTItem conforme
  */
 export function mapToNFTItem(raw: any): NFTItem {
@@ -47,8 +77,8 @@ export function mapToNFTItem(raw: any): NFTItem {
     image: raw.image || localMatch?.image || "/artworks/masque_pende.jpg",
     price: raw.price?.toString() || localMatch?.price || "150",
     priceWei: raw.priceWei || (BigInt(Math.floor(parseFloat(raw.price || "150"))) * BigInt(10 ** 18)).toString(),
-    seller: raw.seller || raw.artisanAddress || localMatch?.seller || "0x70997970c51812dc3a010c7d01b50e0d17dc79c8",
-    artisanName: raw.artisanName || localMatch?.artisanName || "Maître Artisan Congolais",
+    seller: raw.seller || raw.artisanAddress || localMatch?.seller || "0x996c43d1aa5f2c4b51df21e860a0F1a94e9f5309",
+    artisanName: raw.artisanName || localMatch?.artisanName || "Maître Mukendi Kalonji",
     artisanProvince: province,
     artisanBio: raw.artisanBio || raw.bio || localMatch?.artisanBio || "Sculpteur et artisan traditionnel de RDC.",
     artisanVerificationStatus:
@@ -82,6 +112,9 @@ export async function getArtworks(params?: {
   search?: string;
   sortBy?: string;
 }): Promise<NFTItem[]> {
+  const baseUrl = getApiBaseUrl();
+  let backendItems: NFTItem[] = [];
+
   try {
     const query = new URLSearchParams();
     if (params?.category && params.category !== "Toutes catégories") {
@@ -97,37 +130,86 @@ export async function getArtworks(params?: {
       query.set("sortBy", params.sortBy);
     }
 
-    const res = await fetch(`${API_BASE_URL}/artworks?${query.toString()}`, {
+    const res = await fetch(`${baseUrl}/artworks?${query.toString()}`, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
     });
 
-    if (!res.ok) {
-      throw new Error(`API error ${res.status}`);
-    }
+    if (res.ok) {
+      const json = await res.json();
+      if (json.success && json.data) {
+        const itemsList = Array.isArray(json.data.items)
+          ? json.data.items
+          : Array.isArray(json.data)
+          ? json.data
+          : null;
 
-    const json = await res.json();
-    if (json.success && json.data) {
-      const itemsList = Array.isArray(json.data.items)
-        ? json.data.items
-        : Array.isArray(json.data)
-        ? json.data
-        : null;
-
-      if (itemsList && itemsList.length > 0) {
-        return itemsList.map(mapToNFTItem);
+        if (itemsList && itemsList.length > 0) {
+          backendItems = itemsList.map(mapToNFTItem);
+        }
       }
     }
-    return INITIAL_CATALOG_NFTS;
-  } catch {
-    // Fallback gracieux sur les données authentifiées locales
+  } catch (err) {
+    console.warn("Échec de chargement API des œuvres, repli local :", err);
+  }
+
+  // 2. Fusionner avec les œuvres publiées localement
+  let localPublished: NFTItem[] = [];
+  if (typeof window !== "undefined") {
+    try {
+      const stored = localStorage.getItem("senda_local_artworks");
+      if (stored) {
+        localPublished = JSON.parse(stored);
+      }
+    } catch {}
+  }
+
+  // 3. Fusion ordonnée (les œuvres locales et nouvelles apparaissent en premier)
+  const combined = [...localPublished, ...backendItems];
+  const uniqueMap = new Map<string, NFTItem>();
+  for (const item of combined) {
+    const key = String(item.id || item.tokenId);
+    if (!uniqueMap.has(key)) {
+      uniqueMap.set(key, item);
+    }
+  }
+
+  // 4. S'assurer que le catalogue initial est présent si rien n'existe
+  if (uniqueMap.size === 0) {
     return INITIAL_CATALOG_NFTS;
   }
+  for (const base of INITIAL_CATALOG_NFTS) {
+    if (!uniqueMap.has(String(base.id))) {
+      uniqueMap.set(String(base.id), base);
+    }
+  }
+
+  let finalArtworks = Array.from(uniqueMap.values());
+
+  // Appliquer les filtres demandés
+  if (params?.category && params.category !== "Toutes catégories") {
+    finalArtworks = finalArtworks.filter((a) => a.category === params.category);
+  }
+  if (params?.province && params.province !== "Toutes les provinces") {
+    finalArtworks = finalArtworks.filter((a) => a.artisanProvince === params.province);
+  }
+  if (params?.search) {
+    const q = params.search.toLowerCase();
+    finalArtworks = finalArtworks.filter(
+      (a) =>
+        a.name.toLowerCase().includes(q) ||
+        a.artisanName.toLowerCase().includes(q) ||
+        a.materials.toLowerCase().includes(q)
+    );
+  }
+
+  return finalArtworks;
 }
 
 export async function getArtworkById(id: string): Promise<NFTItem | null> {
+  const baseUrl = getApiBaseUrl();
   try {
-    const res = await fetch(`${API_BASE_URL}/artworks/${id}`, {
+    const res = await fetch(`${baseUrl}/artworks/${id}`, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
     });
@@ -141,6 +223,18 @@ export async function getArtworkById(id: string): Promise<NFTItem | null> {
     // ignore
   }
 
+  // Vérifier également dans les œuvres publiées localement
+  if (typeof window !== "undefined") {
+    try {
+      const stored = localStorage.getItem("senda_local_artworks");
+      if (stored) {
+        const list: NFTItem[] = JSON.parse(stored);
+        const match = list.find((item) => item.id === id || item.tokenId.toString() === id);
+        if (match) return match;
+      }
+    } catch {}
+  }
+
   const found = INITIAL_CATALOG_NFTS.find(
     (item) => item.id === id || item.tokenId.toString() === id
   );
@@ -148,8 +242,9 @@ export async function getArtworkById(id: string): Promise<NFTItem | null> {
 }
 
 export async function createOrder(params: CreateOrderParams): Promise<CreateOrderResult> {
+  const baseUrl = getApiBaseUrl();
   try {
-    const res = await fetch(`${API_BASE_URL}/orders`, {
+    const res = await fetch(`${baseUrl}/orders`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(params),
@@ -182,6 +277,7 @@ export async function syncOrderTransaction(
   txType: "DEPOSIT" | "RELEASE" | "REFUND",
   txHash: string
 ) {
+  const baseUrl = getApiBaseUrl();
   try {
     const statusMap = {
       DEPOSIT: "FUNDED",
@@ -189,7 +285,7 @@ export async function syncOrderTransaction(
       REFUND: "REFUNDED",
     };
 
-    await fetch(`${API_BASE_URL}/orders/${orderId}/status`, {
+    await fetch(`${baseUrl}/orders/${orderId}/status`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

@@ -43,26 +43,34 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const RAW_API_URL = process.env.NEXT_PUBLIC_API_URL || "https://nsenda-1.onrender.com";
-const CLEAN_API_URL = RAW_API_URL.replace(/\/+$/, "").replace(/\/api$/, "");
-const API_URL = `${CLEAN_API_URL}/api`;
+function getApiUrl(): string {
+  if (typeof window !== "undefined") {
+    const host = window.location.hostname;
+    if (host === "localhost" || host === "127.0.0.1" || host.startsWith("192.168.") || host.startsWith("10.")) {
+      return `http://${host}:4000/api`;
+    }
+  }
+  const raw = process.env.NEXT_PUBLIC_API_URL || "https://nsenda-1.onrender.com";
+  return `${raw.replace(/\/+$/, "").replace(/\/api$/, "")}/api`;
+}
 
 // Répertoire des comptes prédéfinis
 const SEEDED_ACCOUNTS: Record<string, { password: string; user: User }> = {
   "admin@senda.cd": {
     password: "SendaAdmin2026!",
     user: {
-      id: "usr-admin-01",
+      id: "usr-admin-001",
       email: "admin@senda.cd",
       displayName: "Administrateur SENDA",
       role: "ADMIN",
       verificationStatus: "VERIFIED",
+      walletAddress: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
     },
   },
   "mukendi@artisanat.cd": {
     password: "Artisan2026!",
     user: {
-      id: "usr-artisan-01",
+      id: "usr-artisan-001",
       email: "mukendi@artisanat.cd",
       displayName: "Maître Mukendi Wa Kanyinda",
       role: "ARTISAN",
@@ -70,12 +78,13 @@ const SEEDED_ACCOUNTS: Record<string, { password: string; user: User }> = {
       workshopName: "Atelier Royal du Kwilu",
       province: "Kwilu",
       bio: "Maître sculpteur Pende depuis plus de 25 ans.",
+      walletAddress: "0x996c43d1aa5f2c4b51df21e860a0F1a94e9f5309",
     },
   },
   "tshimanga@artisanat.cd": {
     password: "Artisan2026!",
     user: {
-      id: "usr-artisan-02",
+      id: "usr-artisan-002",
       email: "tshimanga@artisanat.cd",
       displayName: "Papa Tshimanga Kabemba",
       role: "ARTISAN",
@@ -83,17 +92,19 @@ const SEEDED_ACCOUNTS: Record<string, { password: string; user: User }> = {
       workshopName: "Sculptures Tshokwe du Kasaï",
       province: "Grand Kasaï (Kasaï / Kasaï-Oriental / Kasaï-Central)",
       bio: "Sculpteur traditionnel Tshokwe spécialisé dans la statuaire dynastique.",
+      walletAddress: "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
     },
   },
   "acheteur@senda.cd": {
     password: "Acheteur2026!",
     user: {
-      id: "usr-buyer-01",
+      id: "usr-buyer-001",
       email: "acheteur@senda.cd",
       displayName: "Jean-Paul Ilunga",
       role: "BUYER",
       verificationStatus: "VERIFIED",
       province: "Kinshasa",
+      walletAddress: "0x90f79bf6eb2c4f870365e785982e1f101e93b906",
     },
   },
 };
@@ -128,7 +139,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const fetchUserProfile = async (jwtToken: string) => {
     try {
-      const res = await fetch(`${API_URL}/auth/me`, {
+      const res = await fetch(`${getApiUrl()}/auth/me`, {
         headers: {
           Authorization: `Bearer ${jwtToken}`,
         },
@@ -154,7 +165,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // 1. Tentative d'authentification sur le serveur distant
     try {
-      const res = await fetch(`${API_URL}/auth/login`, {
+      const res = await fetch(`${getApiUrl()}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: normalizedEmail, password }),
@@ -225,7 +236,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // 1. Tentative d'enregistrement sur le backend distant
     try {
-      const res = await fetch(`${API_URL}/auth/register`, {
+      const res = await fetch(`${getApiUrl()}/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...data, email: normalizedEmail }),
@@ -307,7 +318,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       let challengeMessage = `AUTHENTIFICATION SENDA RDC\n===========================\nJe certifie être le détenteur légitime de l'adresse :\n${walletAddress.toLowerCase()}\n\nDéfi de sécurité (Nonce) : ${Date.now()}\nHorodatage : ${new Date().toISOString()}\n\nCette signature ne génère aucun frais de gaz et prouve la possession de ma clé privée.`;
       
       try {
-        const nonceRes = await fetch(`${API_URL}/users/nonce`, {
+        const nonceRes = await fetch(`${getApiUrl()}/users/nonce`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -332,7 +343,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // 3. Soumission et validation de la signature par la route POST /api/users/link-wallet
       try {
-        const linkRes = await fetch(`${API_URL}/users/link-wallet`, {
+        const linkRes = await fetch(`${getApiUrl()}/users/link-wallet`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -411,7 +422,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-      await fetch(`${API_URL}/artisans/verification`, {
+      await fetch(`${getApiUrl()}/artisans/verification`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
