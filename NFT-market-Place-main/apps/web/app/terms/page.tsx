@@ -27,17 +27,17 @@ export default function TermsPage() {
         </Link>
 
         {/* En-tête */}
-        <div className="rounded-3xl border border-[#E8E1D5] bg-white p-8 shadow-sm space-y-4">
+        <div id="a-propos" className="scroll-mt-24 rounded-3xl border border-[#E8E1D5] bg-white p-8 shadow-sm space-y-4">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#1B4332] text-[#E9C46A]">
               <FileText className="h-5 w-5" />
             </div>
             <div>
               <h1 className="font-serif text-2xl font-black text-[#1B4332]">
-                Politique d&apos;Usage & Charte Éthique
+                Politique d&apos;Usage, Charte Éthique & FAQ
               </h1>
               <p className="text-xs text-[#8C7A6B]">
-                Plateforme SENDA • Université de Kinshasa (UNIKIN) • Version simplifiée 2026
+                Plateforme SENDA • Université de Kinshasa (UNIKIN) • Version certifiée 2026
               </p>
             </div>
           </div>
@@ -49,13 +49,13 @@ export default function TermsPage() {
         {/* 5 Principes Clairs */}
         <div className="space-y-6">
           {/* 1. Cadre Réglementaire & Réseau de Test */}
-          <div className="rounded-3xl border border-[#E8E1D5] bg-white p-7 shadow-sm space-y-3">
+          <div id="tracabilite" className="scroll-mt-24 rounded-3xl border border-[#E8E1D5] bg-white p-7 shadow-sm space-y-3">
             <div className="flex items-center gap-3 font-bold text-[#1B4332] text-sm">
               <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#1B4332] text-white text-xs">1</span>
-              <span>Cadre Technique et Jetons de Démonstration</span>
+              <span>Cadre Technique, Traçabilité & Jetons de Démonstration</span>
             </div>
             <p className="text-xs text-[#6B5E55] leading-relaxed">
-              SENDA est une plateforme décentralisée d&apos;artisanat d&apos;art congolais déployée sur le réseau de test public <strong>Polygon Amoy</strong>.
+              SENDA est une plateforme décentralisée d&apos;artisanat d&apos;art congolais déployée sur le réseau de test public <strong>Polygon Amoy</strong>. Chaque œuvre est géolocalisée et rattachée à sa province d&apos;origine culturelle (Kinshasa, Kwilu, Kasaï, Katanga, Kongo Central).
             </p>
             <div className="rounded-xl bg-[#FAF7F2] p-3 text-[11px] text-[#4A3B33] border border-[#E8E1D5] flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4 text-[#16A34A] shrink-0" />
@@ -66,7 +66,7 @@ export default function TermsPage() {
           </div>
 
           {/* 2. Redevances & Droits des Artisans */}
-          <div className="rounded-3xl border border-[#E8E1D5] bg-white p-7 shadow-sm space-y-3">
+          <div id="redevances" className="scroll-mt-24 rounded-3xl border border-[#E8E1D5] bg-white p-7 shadow-sm space-y-3">
             <div className="flex items-center gap-3 font-bold text-[#1B4332] text-sm">
               <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#1B4332] text-white text-xs">2</span>
               <span>Protection du Patrimoine & Redevances des Artisans (ERC-2981)</span>
@@ -81,7 +81,7 @@ export default function TermsPage() {
           </div>
 
           {/* 3. Séquestre Physique */}
-          <div className="rounded-3xl border border-[#E8E1D5] bg-white p-7 shadow-sm space-y-3">
+          <div id="sequestre" className="scroll-mt-24 rounded-3xl border border-[#E8E1D5] bg-white p-7 shadow-sm space-y-3">
             <div className="flex items-center gap-3 font-bold text-[#1B4332] text-sm">
               <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#1B4332] text-white text-xs">3</span>
               <span>Paiement Sécurisé sous Séquestre Conditionnel (`SendaEscrow`)</span>
@@ -105,11 +105,11 @@ export default function TermsPage() {
             </div>
           </div>
 
-          {/* 4. Rôle de l'IA */}
-          <div className="rounded-3xl border border-[#E8E1D5] bg-white p-7 shadow-sm space-y-3">
+          {/* 4. Rôle de l'IA & Audit des ateliers */}
+          <div id="audit" className="scroll-mt-24 rounded-3xl border border-[#E8E1D5] bg-white p-7 shadow-sm space-y-3">
             <div className="flex items-center gap-3 font-bold text-[#1B4332] text-sm">
               <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#1B4332] text-white text-xs">4</span>
-              <span>Transparence & Rôle de l&apos;Intelligence Artificielle (SendaVision)</span>
+              <span>Audit Terrain des Ateliers & Assistance IA (SendaVision)</span>
             </div>
             <p className="text-xs text-[#6B5E55] leading-relaxed">
               Le module d&apos;intelligence artificielle (réseau de neurones convolutif MobileNetV3) est un <strong>outil d&apos;assistance à l&apos;authentification</strong>.
@@ -121,8 +121,8 @@ export default function TermsPage() {
             </ul>
           </div>
 
-          {/* 5. Données Personnelles */}
-          <div className="rounded-3xl border border-[#E8E1D5] bg-white p-7 shadow-sm space-y-3">
+          {/* 5. Données Personnelles & Confidentialité */}
+          <div id="confidentialite" className="scroll-mt-24 rounded-3xl border border-[#E8E1D5] bg-white p-7 shadow-sm space-y-3">
             <div className="flex items-center gap-3 font-bold text-[#1B4332] text-sm">
               <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#1B4332] text-white text-xs">5</span>
               <span>Confidentialité et Zéro Donnée Personnelle On-Chain</span>
@@ -135,6 +135,28 @@ export default function TermsPage() {
               <span>
                 <strong>Aucune donnée personnelle en clair (nom de famille civil, coordonnées téléphoniques, adresse physique privée) n&apos;est inscrite sur la blockchain.</strong> Seuls les pseudonymes d&apos;atelier et les adresses publiques cryptographiques de portefeuille sont utilisés.
               </span>
+            </div>
+          </div>
+
+          {/* 6. Foire Aux Questions (FAQ) */}
+          <div id="faq" className="scroll-mt-24 rounded-3xl border border-[#E8E1D5] bg-white p-7 shadow-sm space-y-3">
+            <div className="flex items-center gap-3 font-bold text-[#1B4332] text-sm">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#1B4332] text-white text-xs">6</span>
+              <span>Foire Aux Questions (FAQ)</span>
+            </div>
+            <div className="space-y-3 text-xs text-[#6B5E55]">
+              <div className="border-b border-[#E8E1D5] pb-2">
+                <p className="font-bold text-[#1B4332]">Comment puis-je vérifier un certificat NFT ?</p>
+                <p className="mt-1">Chaque pièce est gravée d&apos;un identifiant unique (Token ID). Vous pouvez accéder à la fiche publique de l&apos;œuvre sur SENDA ou examiner le contrat sur Polygonscan Amoy.</p>
+              </div>
+              <div className="border-b border-[#E8E1D5] pb-2">
+                <p className="font-bold text-[#1B4332]">Quand l&apos;artisan reçoit-il ses fonds ?</p>
+                <p className="mt-1">Dès que l&apos;acheteur confirme la réception de la création physique via son interface d&apos;achat, le contrat SendaEscrow débloque automatiquement les fonds vers le portefeuille de l&apos;artisan.</p>
+              </div>
+              <div>
+                <p className="font-bold text-[#1B4332]">Qui peut devenir artisan partenaire ?</p>
+                <p className="mt-1">Tout maître artisan ou atelier coopératif basé en RDC (Kinshasa, Kwilu, Kasaï, Katanga, Kongo Central) après audit et certification par nos correspondants culturels.</p>
+              </div>
             </div>
           </div>
         </div>

@@ -1,0 +1,28 @@
+{
+  "name": "senda-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "SENDA — Marketplace décentralisée de l'artisanat de la République Démocratique du Congo",
+  "scripts": {
+    "build": "npm install --prefix backend && cd backend && npx prisma generate && npm run build",
+    "start": "cd backend && npm start",
+    "install:backend": "npm install --prefix backend",
+    "build:backend": "npm install --prefix backend && cd backend && npx prisma generate && npm run build",
+    "start:backend": "cd backend && npm start",
+    "install:web": "npm install --prefix NFT-market-Place-main/apps/web",
+    "build:web": "npm install --prefix NFT-market-Place-main/apps/web && cd NFT-market-Place-main/apps/web && npm run build",
+    "start:web": "cd NFT-market-Place-main/apps/web && npm start"
+  },
+  "keywords": [
+    "senda",
+    "congo",
+    "artisanat",
+    "marketplace",
+    "web3",
+    "polygon-amoy",
+    "nft",
+    "escrow"
+  ],
+  "author": "SENDA Team (UNIKIN)",
+  "license": "MIT"
+}

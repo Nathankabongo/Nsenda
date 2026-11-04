@@ -1,0 +1,45 @@
+services:
+  # ============================================================================
+  # SERVICE 1 : BACKEND REST API & PRISMA ORM (Node.js / Express)
+  # ============================================================================
+  - type: web
+    name: senda-backend
+    env: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm install && npx prisma generate && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: 20.12.2
+      - key: PORT
+        value: 10000
+      - key: DATABASE_URL
+        sync: false # À renseigner avec l'URL de votre base Supabase
+      - key: JWT_SECRET
+        generateValue: true
+      - key: POLYGON_AMOY_RPC_URL
+        value: https://rpc-amoy.polygon.technology
+      - key: PINATA_GATEWAY_URL
+        value: https://gateway.pinata.cloud
+
+  # ============================================================================
+  # SERVICE 2 : FRONTEND WEB MARKETPLACE (Next.js 14)
+  # ============================================================================
+  - type: web
+    name: senda-web
+    env: node
+    plan: free
+    rootDir: NFT-market-Place-main/apps/web
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 20.12.2
+      - key: NEXT_PUBLIC_DEFAULT_NETWORK
+        value: polygonAmoy
+      - key: NEXT_PUBLIC_POLYGON_AMOY_RPC
+        value: https://rpc-amoy.polygon.technology
+      - key: NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID
+        value: 3a8170812b534d0ff9d794f168fa4d80

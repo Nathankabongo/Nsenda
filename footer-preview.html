@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SENDA — Nouveau Footer Conforme UI/UX & WCAG 2.1 AA</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            senda: {
+              green: {
+                DEFAULT: '#1B4332',
+                light: '#2D6A4F',
+                dark: '#081C15',
+                hover: '#143728',
+                subtle: '#E8F0EC',
+              },
+              ochre: {
+                DEFAULT: '#C86D3B',
+                light: '#D97706',
+                dark: '#9C4E23',
+                hover: '#B65E2F',
+              },
+              gold: {
+                DEFAULT: '#E9C46A',
+                light: '#F4A261',
+              },
+            }
+          },
+          fontFamily: {
+            serif: ['Cinzel', 'Georgia', 'serif'],
+            sans: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      background-color: #F8F5F0;
+      color: #2D231E;
+      margin: 0;
+      padding: 0;
+    }
+    .preview-frame {
+      transition: max-width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+  <!-- ============================================================ -->
+  <!-- BARRE DE CONTRÔLE DE PRÉVISUALISATION RESPONSIVE SENDA       -->
+  <!-- ============================================================ -->
+  <aside aria-label="Contrôles de prévisualisation responsive" class="sticky top-0 z-50 bg-[#1B4332] text-white px-4 py-3 border-b border-[#2D6A4F] shadow-md">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3 text-xs">
+      <div class="flex items-center gap-2">
+        <span class="inline-flex h-6 w-6 items-center justify-center rounded-md bg-[#E9C46A] text-[#1B4332] font-black text-xs">S</span>
+        <span class="font-bold tracking-wide">SENDA Design System</span>
+        <span class="hidden sm:inline-block text-[#C1DBCF]">• Aperçu Responsive Footer (WCAG 2.1 AA)</span>
+      </div>
+
+      <div class="flex items-center gap-1.5 bg-[#081C15] p-1 rounded-xl border border-[#2D6A4F]/60">
+        <button id="btn-desktop" onclick="setViewport('100%')" class="px-3 py-1 rounded-lg font-semibold text-[#E9C46A] bg-[#1B4332] transition">
+          Desktop (≥ 1024px)
+        </button>
+        <button id="btn-tablet" onclick="setViewport('768px')" class="px-3 py-1 rounded-lg font-semibold text-[#C1DBCF] hover:text-white transition">
+          Tablette (768px)
+        </button>
+        <button id="btn-mobile" onclick="setViewport('390px')" class="px-3 py-1 rounded-lg font-semibold text-[#C1DBCF] hover:text-white transition">
+          Mobile (390px)
+        </button>
+      </div>
+
+      <div class="flex items-center gap-2 text-[11px] text-[#A7C4B5]">
+        <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span>Contraste &gt; 4.5:1 • Tap targets &ge; 44px</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Contenu simulé du haut de page -->
+  <main class="max-w-5xl mx-auto px-4 py-12 text-center">
+    <span class="inline-block rounded-full bg-[#1B4332]/10 border border-[#1B4332]/20 px-3 py-1 text-xs font-bold text-[#1B4332] mb-3">
+      SENDA • Refonte UI/UX du Footer
+    </span>
+    <h1 class="font-serif text-3xl sm:text-4xl font-extrabold text-[#1B4332] mb-3">
+      Artisanat Authentifié de RDC & Smart Contracts
+    </h1>
+    <p class="text-sm sm:text-base text-[#6B5E55] max-w-2xl mx-auto leading-relaxed">
+      Démonstrateur de la nouvelle architecture de pied de page : bandeau de réassurance indépendant, grille 12 colonnes, accordéons tactiles accessibles sur mobile et typographie soignée.
+    </p>
+  </main>
+
+  <!-- ============================================================ -->
+  <!-- CADRE DU FOOTER RESPONSIVE                                   -->
+  <!-- ============================================================ -->
+  <div id="preview-wrapper" class="preview-frame w-full mx-auto shadow-2xl transition-all duration-300">
+    
+    <footer role="contentinfo" aria-label="Pied de page SENDA" class="border-t border-[#1B4332]/80 bg-[#081C15] text-[#C1DBCF] py-10 sm:py-16 lg:py-20">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        
+        <!-- BANDEAU SUPÉRIEUR : SIGNAUX DE CONFIANCE (3 blocs séparés) -->
+        <section aria-label="Engagements et garanties de sécurité SENDA" class="pb-10 sm:pb-12 border-b border-[#1B4332]/60">
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 sm:gap-6 lg:gap-8">
+            
+            <!-- Badge 1 : Séquestre Garanti -->
+            <div class="group flex items-center gap-4 rounded-2xl bg-[#0B251B]/80 p-4 sm:p-5 border border-[#1B4332]/80 shadow-sm transition-all duration-200 hover:border-[#2D6A4F] hover:bg-[#0F2E22]">
+              <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#E9C46A]/30 bg-[#E9C46A]/10 text-[#E9C46A] shadow-sm transition-transform duration-200 group-hover:scale-105" aria-hidden="true">
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+              </div>
+              <div class="min-w-0 flex-1">
+                <h3 class="text-sm font-semibold text-white tracking-wide">Séquestre garanti</h3>
+                <p class="mt-0.5 text-xs text-[#A7C4B5] leading-snug">Fonds bloqués jusqu’à réception</p>
+              </div>
+            </div>
+
+            <!-- Badge 2 : Ateliers Certifiés -->
+            <div class="group flex items-center gap-4 rounded-2xl bg-[#0B251B]/80 p-4 sm:p-5 border border-[#1B4332]/80 shadow-sm transition-all duration-200 hover:border-[#2D6A4F] hover:bg-[#0F2E22]">
+              <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#10B981]/30 bg-[#10B981]/10 text-[#10B981] shadow-sm transition-transform duration-200 group-hover:scale-105" aria-hidden="true">
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/>
+                  <path d="m9 12 2 2 4-4"/>
+                </svg>
+              </div>
+              <div class="min-w-0 flex-1">
+                <h3 class="text-sm font-semibold text-white tracking-wide">Ateliers certifiés</h3>
+                <p class="mt-0.5 text-xs text-[#A7C4B5] leading-snug">Audit sur site</p>
+              </div>
+            </div>
+
+            <!-- Badge 3 : Rémunération Équitable -->
+            <div class="group flex items-center gap-4 rounded-2xl bg-[#0B251B]/80 p-4 sm:p-5 border border-[#1B4332]/80 shadow-sm transition-all duration-200 hover:border-[#2D6A4F] hover:bg-[#0F2E22]">
+              <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#C86D3B]/30 bg-[#C86D3B]/10 text-[#C86D3B] shadow-sm transition-transform duration-200 group-hover:scale-105" aria-hidden="true">
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="8" r="6"/>
+                  <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/>
+                </svg>
+              </div>
+              <div class="min-w-0 flex-1">
+                <h3 class="text-sm font-semibold text-white tracking-wide">Rémunération équitable</h3>
+                <p class="mt-0.5 text-xs text-[#A7C4B5] leading-snug">Redevances reversées aux créateurs</p>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- CORPS PRINCIPAL : GRILLE 12 COLONNES (4 COLONNES DESKTOP) -->
+        <div class="pt-10 sm:pt-14 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-8">
+          
+          <!-- Colonne 1 : MARQUE (4 col. desktop, pleine largeur tablette) -->
+          <div class="space-y-4 sm:col-span-2 lg:col-span-4 lg:pr-6">
+            <a href="/" class="inline-flex items-center gap-3 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E9C46A] rounded-lg" aria-label="Accueil SENDA">
+              <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-[#E9C46A] text-[#1B4332] shadow-md transition-transform duration-200 group-hover:scale-105" aria-hidden="true">
+                <span class="font-serif text-xl font-black">S</span>
+              </div>
+              <div class="flex flex-col">
+                <span class="font-serif text-2xl font-bold tracking-widest text-white leading-none">SENDA</span>
+                <span class="text-[10px] uppercase font-semibold tracking-wider text-[#E9C46A] mt-1">L’artisanat congolais authentifié</span>
+              </div>
+            </a>
+
+            <p class="text-sm leading-relaxed text-[#A7C4B5] max-w-md">
+              Marketplace décentralisée de l’artisanat congolais. Chaque création est authentifiée, payée sous séquestre et conservée de façon permanente.
+            </p>
+
+            <!-- Réseaux Sociaux -->
+            <div class="pt-1">
+              <div class="flex items-center gap-2">
+                <a href="https://x.com" target="_blank" rel="noopener noreferrer" aria-label="Suivre SENDA sur X (Twitter)" class="flex h-10 w-10 min-w-[40px] items-center justify-center rounded-xl bg-[#0F2E22] border border-[#1B4332] text-[#C1DBCF] transition-all duration-200 hover:bg-[#143D2D] hover:border-[#E9C46A] hover:text-[#E9C46A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E9C46A]">
+                  <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                  </svg>
+                </a>
+                <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Découvrir nos créateurs sur Instagram" class="flex h-10 w-10 min-w-[40px] items-center justify-center rounded-xl bg-[#0F2E22] border border-[#1B4332] text-[#C1DBCF] transition-all duration-200 hover:bg-[#143D2D] hover:border-[#E9C46A] hover:text-[#E9C46A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E9C46A]">
+                  <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect width="20" height="20" x="2" y="2" rx="5" ry="5"/>
+                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+                    <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>
+                  </svg>
+                </a>
+                <a href="https://discord.gg" target="_blank" rel="noopener noreferrer" aria-label="Rejoindre la communauté sur Discord" class="flex h-10 w-10 min-w-[40px] items-center justify-center rounded-xl bg-[#0F2E22] border border-[#1B4332] text-[#C1DBCF] transition-all duration-200 hover:bg-[#143D2D] hover:border-[#E9C46A] hover:text-[#E9C46A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E9C46A]">
+                  <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+                  </svg>
+                </a>
+                <a href="https://github.com" target="_blank" rel="noopener noreferrer" aria-label="Consulter le code sur GitHub" class="flex h-10 w-10 min-w-[40px] items-center justify-center rounded-xl bg-[#0F2E22] border border-[#1B4332] text-[#C1DBCF] transition-all duration-200 hover:bg-[#143D2D] hover:border-[#E9C46A] hover:text-[#E9C46A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E9C46A]">
+                  <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0 0 22 12.017C22 6.484 17.522 2 12 2z"/>
+                  </svg>
+                </a>
+              </div>
+            </div>
+
+            <!-- Badge Blockchain Réseau -->
+            <div class="pt-2">
+              <div class="inline-flex items-center gap-2 rounded-lg bg-[#0B251B] px-3 py-1.5 border border-[#1B4332] text-xs">
+                <span class="relative flex h-2 w-2">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span class="text-[#8FAF9E] text-[11px]">
+                  Réseau : <a href="https://amoy.polygonscan.com" target="_blank" rel="noopener noreferrer" class="text-[#E9C46A] font-medium hover:underline">Polygon Amoy ↗</a>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Colonne 2 : COLLECTIONS (2 col. desktop) -->
+          <div class="sm:col-span-1 lg:col-span-2">
+            <nav aria-label="Collections de pièces d’artisanat congolais" class="border-b border-[#1B4332]/40 pb-4 sm:border-b-0 sm:pb-0">
+              <div class="sm:hidden">
+                <button type="button" onclick="toggleAccordion('col-1', 'icon-1')" aria-expanded="false" class="flex w-full min-h-[44px] items-center justify-between py-2 text-left text-xs font-semibold uppercase tracking-wider text-[#E9C46A]">
+                  <span class="font-serif text-sm">Collections</span>
+                  <svg id="icon-1" class="h-4 w-4 text-[#E9C46A] transition-transform duration-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+                </button>
+              </div>
+              <h3 class="hidden sm:block font-serif text-xs font-semibold uppercase tracking-wider text-[#E9C46A] mb-4">Collections</h3>
+              <ul id="col-1" class="space-y-2.5 pt-2 sm:pt-0 hidden sm:block">
+                <li><a href="/catalogue?categorie=masques" class="py-1 text-sm text-[#C1DBCF] leading-relaxed transition-colors duration-200 hover:text-[#E9C46A] hover:underline underline-offset-4 block">Masques traditionnels (Pende, Kuba)</a></li>
+                <li><a href="/catalogue?categorie=sculptures" class="py-1 text-sm text-[#C1DBCF] leading-relaxed transition-colors duration-200 hover:text-[#E9C46A] hover:underline underline-offset-4 block">Statuettes & Sculptures (Tshokwe, Luba)</a></li>
+                <li><a href="/catalogue?categorie=textiles" class="py-1 text-sm text-[#C1DBCF] leading-relaxed transition-colors duration-200 hover:text-[#E9C46A] hover:underline underline-offset-4 block">Textiles & Velours Shoowa</a></li>
+                <li><a href="/catalogue?categorie=vannerie" class="py-1 text-sm text-[#C1DBCF] leading-relaxed transition-colors duration-200 hover:text-[#E9C46A] hover:underline underline-offset-4 block">Vannerie & Céramiques du Kwilu</a></li>
+                <li><a href="/catalogue?categorie=bijoux" class="py-1 text-sm text-[#C1DBCF] leading-relaxed transition-colors duration-200 hover:text-[#E9C46A] hover:underline underline-offset-4 block">Bijoux & Pectoraux en Malachite</a></li>
+              </ul>
+            </nav>
+          </div>
+
+          <!-- Colonne 3 : CONFIANCE & GARANTIES (3 col. desktop) -->
+          <div class="sm:col-span-1 lg:col-span-3">
+            <nav aria-label="Informations sur le protocole de confiance et garanties" class="border-b border-[#1B4332]/40 pb-4 sm:border-b-0 sm:pb-0">
+              <div class="sm:hidden">
+                <button type="button" onclick="toggleAccordion('col-2', 'icon-2')" aria-expanded="false" class="flex w-full min-h-[44px] items-center justify-between py-2 text-left text-xs font-semibold uppercase tracking-wider text-[#E9C46A]">
+                  <span class="font-serif text-sm">Confiance & Garanties</span>
+                  <svg id="icon-2" class="h-4 w-4 text-[#E9C46A] transition-transform duration-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+                </button>
+              </div>
+              <h3 class="hidden sm:block font-serif text-xs font-semibold uppercase tracking-wider text-[#E9C46A] mb-4">Confiance & Garanties</h3>
+              <ul id="col-2" class="space-y-2.5 pt-2 sm:pt-0 hidden sm:block">
+                <li><a href="/terms#sequestre" class="py-1 text-sm text-[#C1DBCF] leading-relaxed transition-colors duration-200 hover:text-[#E9C46A] hover:underline underline-offset-4 block">Comment fonctionne le séquestre</a></li>
+                <li><a href="/nft/1#certificat" class="py-1 text-sm text-[#C1DBCF] leading-relaxed transition-colors duration-200 hover:text-[#E9C46A] hover:underline underline-offset-4 block">Vérifier un certificat d’authenticité</a></li>
+                <li><a href="/terms#audit" class="py-1 text-sm text-[#C1DBCF] leading-relaxed transition-colors duration-200 hover:text-[#E9C46A] hover:underline underline-offset-4 block">Notre audit des ateliers</a></li>
+                <li><a href="/terms#tracabilite" class="py-1 text-sm text-[#C1DBCF] leading-relaxed transition-colors duration-200 hover:text-[#E9C46A] hover:underline underline-offset-4 block">Traçabilité par province</a></li>
+                <li><a href="/terms#redevances" class="py-1 text-sm text-[#C1DBCF] leading-relaxed transition-colors duration-200 hover:text-[#E9C46A] hover:underline underline-offset-4 block">Politique de redevances</a></li>
+              </ul>
+            </nav>
+          </div>
+
+          <!-- Colonne 4 : AIDE & LÉGAL (3 col. desktop) -->
+          <div class="sm:col-span-2 lg:col-span-3">
+            <nav aria-label="Aide, contact et mentions légales" class="border-b border-[#1B4332]/40 pb-4 sm:border-b-0 sm:pb-0">
+              <div class="sm:hidden">
+                <button type="button" onclick="toggleAccordion('col-3', 'icon-3')" aria-expanded="false" class="flex w-full min-h-[44px] items-center justify-between py-2 text-left text-xs font-semibold uppercase tracking-wider text-[#E9C46A]">
+                  <span class="font-serif text-sm">Aide & Légal</span>
+                  <svg id="icon-3" class="h-4 w-4 text-[#E9C46A] transition-transform duration-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+                </button>
+              </div>
+              <h3 class="hidden sm:block font-serif text-xs font-semibold uppercase tracking-wider text-[#E9C46A] mb-4">Aide & Légal</h3>
+              <ul id="col-3" class="space-y-2.5 pt-2 sm:pt-0 hidden sm:block">
+                <li><a href="/terms#a-propos" class="py-1 text-sm text-[#C1DBCF] leading-relaxed transition-colors duration-200 hover:text-[#E9C46A] hover:underline underline-offset-4 block">À propos</a></li>
+                <li><a href="/terms#faq" class="py-1 text-sm text-[#C1DBCF] leading-relaxed transition-colors duration-200 hover:text-[#E9C46A] hover:underline underline-offset-4 block">FAQ</a></li>
+                <li><a href="mailto:contact@senda.cd" class="py-1 text-sm text-[#C1DBCF] leading-relaxed transition-colors duration-200 hover:text-[#E9C46A] hover:underline underline-offset-4 block">Contact</a></li>
+                <li>
+                  <a href="/register" class="inline-flex items-center gap-2 py-1 text-sm text-[#C1DBCF] leading-relaxed transition-colors duration-200 hover:text-[#E9C46A]">
+                    <span class="hover:underline underline-offset-4">Devenir artisan partenaire</span>
+                    <span class="rounded-full bg-[#C86D3B]/20 border border-[#C86D3B]/50 px-2 py-0.5 text-[10px] font-semibold text-[#E9C46A]">Nouveau</span>
+                  </a>
+                </li>
+                <li><a href="/terms" class="py-1 text-sm text-[#C1DBCF] leading-relaxed transition-colors duration-200 hover:text-[#E9C46A] hover:underline underline-offset-4 block">Conditions d’utilisation</a></li>
+                <li><a href="/terms#confidentialite" class="py-1 text-sm text-[#C1DBCF] leading-relaxed transition-colors duration-200 hover:text-[#E9C46A] hover:underline underline-offset-4 block">Politique de confidentialité</a></li>
+              </ul>
+            </nav>
+          </div>
+
+        </div>
+
+        <!-- BANDE INFÉRIEURE : COPYRIGHT, PROVINCES & LANGUE -->
+        <div class="mt-12 sm:mt-16 border-t border-[#1B4332]/60 pt-6">
+          <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between text-xs text-[#8FAF9E]">
+            
+            <!-- Gauche : Copyright -->
+            <div class="order-2 md:order-1">
+              <p class="leading-relaxed">
+                © 2026 SENDA — L’artisanat congolais, authentifié et valorisé. Tous droits réservés.
+              </p>
+            </div>
+
+            <!-- Centre / Droite : Provinces d'origine -->
+            <div class="order-1 md:order-2 flex flex-wrap items-center gap-1.5">
+              <span class="text-[11px] text-[#A7C4B5] font-medium mr-1 hidden sm:inline">Provinces d’origine :</span>
+              <span class="inline-flex items-center rounded-md bg-[#0F2E22] px-2 py-0.5 text-[11px] font-medium text-[#C1DBCF] border border-[#1B4332]">Kinshasa</span>
+              <span class="inline-flex items-center rounded-md bg-[#0F2E22] px-2 py-0.5 text-[11px] font-medium text-[#C1DBCF] border border-[#1B4332]">Kwilu</span>
+              <span class="inline-flex items-center rounded-md bg-[#0F2E22] px-2 py-0.5 text-[11px] font-medium text-[#C1DBCF] border border-[#1B4332]">Kasaï</span>
+              <span class="inline-flex items-center rounded-md bg-[#0F2E22] px-2 py-0.5 text-[11px] font-medium text-[#C1DBCF] border border-[#1B4332]">Katanga</span>
+              <span class="inline-flex items-center rounded-md bg-[#0F2E22] px-2 py-0.5 text-[11px] font-medium text-[#C1DBCF] border border-[#1B4332]">Kongo Central</span>
+            </div>
+
+            <!-- Droite : Sélecteur de langue -->
+            <div class="order-3 flex items-center gap-2">
+              <div role="group" aria-label="Choix de la langue" class="inline-flex items-center rounded-lg bg-[#0B251B] p-0.5 border border-[#1B4332]">
+                <span class="text-[#E9C46A] ml-2 mr-1">🌐</span>
+                <button type="button" class="bg-[#1B4332] text-[#E9C46A] px-2 py-1 rounded-md text-[11px] font-semibold">FR</button>
+                <button type="button" class="text-[#8FAF9E] hover:text-white px-2 py-1 rounded-md text-[11px] font-semibold">EN</button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </footer>
+
+  </div>
+
+  <script>
+    function setViewport(width) {
+      const frame = document.getElementById('preview-wrapper');
+      frame.style.maxWidth = width;
+      
+      const buttons = ['btn-desktop', 'btn-tablet', 'btn-mobile'];
+      buttons.forEach(id => {
+        const btn = document.getElementById(id);
+        btn.classList.remove('bg-[#1B4332]', 'text-[#E9C46A]');
+        btn.classList.add('text-[#C1DBCF]');
+      });
+
+      if (width === '100%') {
+        document.getElementById('btn-desktop').classList.add('bg-[#1B4332]', 'text-[#E9C46A]');
+      } else if (width === '768px') {
+        document.getElementById('btn-tablet').classList.add('bg-[#1B4332]', 'text-[#E9C46A]');
+      } else if (width === '390px') {
+        document.getElementById('btn-mobile').classList.add('bg-[#1B4332]', 'text-[#E9C46A]');
+      }
+    }
+
+    function toggleAccordion(colId, iconId) {
+      const col = document.getElementById(colId);
+      const icon = document.getElementById(iconId);
+      const isHidden = col.classList.contains('hidden');
+      
+      if (isHidden) {
+        col.classList.remove('hidden');
+        icon.classList.add('rotate-180');
+      } else {
+        col.classList.add('hidden');
+        icon.classList.remove('rotate-180');
+      }
+    }
+  </script>
+</body>
+</html>
