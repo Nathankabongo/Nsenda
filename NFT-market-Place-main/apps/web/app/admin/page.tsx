@@ -8,6 +8,7 @@ import {
   ShieldAlert,
   CheckCircle2,
   XCircle,
+  X,
   AlertTriangle,
   Clock,
   Building2,
@@ -306,7 +307,7 @@ export default function AdminPage() {
                               : "bg-red-50 text-red-700 border border-red-200"
                           }`}
                         >
-                          {dossier.status === "APPROVED" ? "✓ Certifié" : "✕ Rejeté"}
+                          {dossier.status === "APPROVED" ? "Certifié" : "Rejeté"}
                         </span>
                       )}
                     </div>
@@ -384,8 +385,9 @@ export default function AdminPage() {
                 type="button"
                 onClick={() => setSelectedDossier(null)}
                 className="text-[#8C7A6B] hover:text-[#2D231E]"
+                aria-label="Fermer"
               >
-                ✕
+                <X className="h-4 w-4" />
               </button>
             </div>
 

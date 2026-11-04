@@ -218,7 +218,7 @@ export default function RegisterPage() {
           )}
 
           <div className="rounded-xl bg-[#FAF8F5] p-3 border border-[#EAE3D6] text-[11px] text-[#6B5A4E]">
-            💡 <strong className="text-[#1B4332]">Preuve de détention Web3 :</strong> Vous pourrez lier votre portefeuille MetaMask après création de votre compte en signant un message cryptographique sécurisé.
+            <strong className="text-[#1B4332]">Preuve de détention Web3 :</strong> Vous pourrez lier votre portefeuille MetaMask après création de votre compte en signant un message cryptographique sécurisé.
           </div>
 
           <button

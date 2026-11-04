@@ -242,7 +242,7 @@ export default function HomePage() {
                   </div>
                 </div>
                 <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 border border-amber-200 shrink-0">
-                  🟡 En cours de séquestre (Funded)
+                  Séquestre actif (Funded)
                 </span>
               </div>
               <div className="flex items-center justify-between text-xs">
@@ -267,7 +267,7 @@ export default function HomePage() {
                   </div>
                 </div>
                 <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 shrink-0">
-                  🟢 Fonds Transférés (Released)
+                  Fonds transférés (Released)
                 </span>
               </div>
               <div className="flex items-center justify-between text-xs">
@@ -371,7 +371,7 @@ export default function HomePage() {
                   <div className="mt-4 space-y-3">
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-[#C86D3B] font-bold uppercase text-[10px] tracking-wider">Masque Traditionnel</span>
-                      <span className="text-emerald-400 font-bold text-[10px]">✓ Atelier Vérifié</span>
+                      <span className="text-emerald-400 font-bold text-[10px]">Atelier vérifié</span>
                     </div>
                     <h3 className="font-serif text-lg font-bold text-white">Masque Royal Pende — Mbuya</h3>
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-[#2D6A4F]">
@@ -752,7 +752,7 @@ export default function HomePage() {
                       Masque traditionnel Mbuya
                     </span>
                     <span className="text-[11px] font-bold text-[#16A34A] bg-[#16A34A]/20 px-2.5 py-0.5 rounded-full border border-[#16A34A]/30">
-                      ✓ Audit sur site
+                      Audit sur site
                     </span>
                   </div>
 

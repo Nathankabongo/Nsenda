@@ -277,7 +277,7 @@ export default function CreateNFTPage() {
 
             {isIpfsDemoMode && (
               <div className="rounded-xl bg-amber-50 border border-amber-200 p-2.5 text-[11px] text-amber-800 text-center font-medium">
-                ⚠️ Mode démo : Service IPFS distant non connecté. Métadonnées de démonstration ancrées on-chain.
+                Mode démo : Service IPFS distant non connecté. Métadonnées de démonstration ancrées on-chain.
               </div>
             )}
 
@@ -468,7 +468,7 @@ export default function CreateNFTPage() {
                         Score d&apos;Authenticité IA : {aiScan.score}%
                       </span>
                       <span className="text-[10px] font-mono text-[#1B4332] bg-white px-2 py-0.5 rounded-full border border-[#C1DBCF]">
-                        ✓ Certifié Conforme
+                        Certifié conforme
                       </span>
                     </div>
                     <p className="text-[11px] text-[#2D6A4F]">{aiScan.verdict}</p>
@@ -539,7 +539,7 @@ export default function CreateNFTPage() {
                       <MapPin className="h-3 w-3 text-[#E9C46A]" /> {province}
                     </span>
                     <span className="rounded-full bg-[#E8F0EC] border border-[#C1DBCF] px-2 py-0.5 text-[10px] font-bold text-[#1B4332]">
-                      ✓ Certifié SENDA
+                      Certifié SENDA
                     </span>
                   </div>
                   <div className="absolute top-3 right-3 rounded-full bg-[#2D231E]/80 px-2 py-0.5 text-[10px] font-bold text-[#E9C46A]">

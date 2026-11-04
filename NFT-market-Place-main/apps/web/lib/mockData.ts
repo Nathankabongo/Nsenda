@@ -37,6 +37,7 @@ export interface NFTItem {
   collectionName: string;
   traits: { trait_type: string; value: string | number }[];
   aiCertificate?: AICertificate;
+  isDemo?: boolean;
 }
 
 export const CONGO_PROVINCES = [

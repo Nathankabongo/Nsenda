@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
+import { DemoBanner } from "@/components/DemoBanner";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Toaster } from "sonner";
@@ -36,6 +37,7 @@ export default function RootLayout({
     <html lang="fr">
       <body className="bg-[#F8F5F0] text-[#2D231E] antialiased min-h-screen flex flex-col selection:bg-[#C86D3B]/20 selection:text-[#1B4332]">
         <Providers>
+          <DemoBanner />
           <Navbar />
           <main className="flex-1">{children}</main>
           <Footer />

@@ -368,7 +368,7 @@ export default function NFTDetailPage() {
                       </div>
                       <div className="flex items-center justify-between pb-2 border-b border-[#E8E1D5]">
                         <span className="text-[#6B5E55]">Matériaux naturels analysés :</span>
-                        <span className="font-bold text-[#16A34A]">✓ 100% Organiques / Non synthétiques</span>
+                        <span className="font-semibold text-[#16A34A]">100% organiques / non synthétiques</span>
                       </div>
                       <div className="flex items-center justify-between pb-2 border-b border-[#E8E1D5]">
                         <span className="text-[#6B5E55]">Risque d&apos;anomalie / contrefaçon :</span>
